@@ -8,3 +8,4 @@ t/02-basic.t
 t/pod_coverage.t
 t/pod.t
 META.yml
+ChangeLog
