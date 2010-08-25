@@ -1,3 +1,48 @@
+=head1 NAME
+
+Net::Songkick
+
+=head1 SUMMARY
+
+Perl wrapper for the Songkick API
+
+=head1 SYNOPSIS
+
+  use Net::Songkick;
+
+  my $api_key = 'your_api_key';
+  my $sk = Net::Songkick->new({ api_key => $api_key });
+
+  # Returns XML by default
+  my $events = $sk->get_events;
+
+  # Or returns JSON
+  my $events = $sk->get_events({ format => 'json' });
+
+=head1 DESCRIPTION
+
+This module presents a Perl wrapper around the Songkick API.
+
+Songkick (L<http://www.songkick.com/>) is a web site that tracks gigs
+around the world. Users can add information about gigs (both in the past
+and the future) and can track their attendance at those gigs.
+
+For more details of the Songkick API see L<http://developer.songkick.com/>.
+
+=head1 METHODS
+
+=head2 Net::Songkick->new({ api_key => $api_key })
+
+Creates a new object which can be used to request data from the Songkick
+API. Requires one parameter which is the user's API key.
+
+To request an API key from Songkick, see
+L<http://www.songkick.com/api_keys/index>.
+
+Returns a Net::Songkick object if successful.
+
+=cut
+
 package Net::Songkick;
 
 use strict;
@@ -59,13 +104,25 @@ sub _request {
   }
 }
 
+=head2 $sk->get_upcoming_events({ ... options ... });
+
+Gets a list of upcoming events from Songkick. Various parameters to control
+the events returned are supported for the full list see
+L<http://www.songkick.com/developer/event-search>.
+
+In addition, this method takes an extra parameter, B<format>, which control
+the format of the data returned. This can be either I<xml> or I<json>. If this
+parameter is omitted, then I<xml> is assumed.
+
+=cut
+
 sub get_events {
   my $self = shift;
   my ($params) = @_;
 
   my $format = $DEF_FMT;
   if (exists $params->{format}) {
-    $format = delete $params->{format};
+    $format = lc delete $params->{format};
   }
 
   my $url = "$EVT_URL.$format?apikey=" . $self->api_key;
@@ -79,6 +136,17 @@ sub get_events {
   return $self->_request($url);
 }
 
+=head2 $sk->get_upcoming_events({ ... options ... });
+
+Gets a list of upcoming events for a particular user from Songkick. This
+method accepts all of the same search parameters as C<get_events>. It also
+supports the optional B<format> parameter.
+
+This method has another, mandatory, parameter called B<user>. This is the
+username of the user that you want information about.
+
+=cut
+
 sub get_upcoming_events {
   my $self = shift;
 
@@ -86,7 +154,7 @@ sub get_upcoming_events {
 
   my $format = $DEF_FMT;
   if (exists $params->{format}) {
-    $format = delete $params->{format};
+    $format = lc delete $params->{format};
   }
 
   my $user;
@@ -108,6 +176,18 @@ sub get_upcoming_events {
   return $self->_request($url);
 }
 
+=head2 $sk->get_past_events({ ... options ... });
+
+Gets a list of upcoming events for a particular user from Songkick.
+
+This method has an optional parameter, B<page> to control which page of
+the data you want to return. It also supports the B<format> parameter.
+
+This method has another, mandatory, parameter called B<user>. This is the
+username of the user that you want information about.
+
+=cut
+
 sub get_past_events {
   my $self = shift;
 
@@ -115,7 +195,7 @@ sub get_past_events {
 
   my $format = $DEF_FMT;
   if (exists $params->{format}) {
-    $format = delete $params->{format};
+    $format = lc delete $params->{format};
   }
 
   my $user;
@@ -137,6 +217,18 @@ sub get_past_events {
   return $self->_request($url);
 }
 
+=head2 $sk->get_setlist({ ... options ... });
+
+Returns information about a set list from a gig. It supports the B<format>
+parameter.
+
+This method also has a mandatory parameter called B<event_id>. This is the
+Songkick identifier for the gig that you want the set list for. For more
+details about this parameter, see
+L<http://www.songkick.com/developer/setlists>.
+
+=cut
+
 sub get_setlist {
   my $self = shift;
 
@@ -144,7 +236,7 @@ sub get_setlist {
 
   my $format = $DEF_FMT;
   if (exists $params->{format}) {
-    $format = delete $params->{format};
+    $format = lc delete $params->{format};
   }
 
   my $event_id;
@@ -165,5 +257,22 @@ sub get_setlist {
 
   return $self->_request($url);
 }
+
+=head1 AUTHOR
+
+Dave Cross <dave@mag-sol.com>
+
+=head1 SEE ALSO
+
+perl(1), L<http://www.songkick.com/>, L<http://developer.songkick.com/>
+
+=head1 COPYRIGHT AND LICENSE
+
+Copyright (C) 2010, Magnum Solutions Ltd.  All Rights Reserved.
+
+This script is free software; you can redistribute it and/or modify it
+under the same terms as Perl itself. 
+
+=cut
 
 1;
