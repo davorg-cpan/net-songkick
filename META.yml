@@ -1,0 +1,23 @@
+---
+abstract: 'Perl wrapper for the Songkick API'
+author:
+  - 'Dave Cross <dave@mag-sol.com>'
+configure_requires:
+  Module::Build: 0.36
+generated_by: 'Module::Build version 0.3603'
+license: perl
+meta-spec:
+  url: http://module-build.sourceforge.net/META-spec-v1.4.html
+  version: 1.4
+name: Net-Songkick
+provides:
+  Net::Songkick:
+    file: lib/Net/Songkick.pm
+    version: 0.01
+requires:
+  LWP::UserAgent: 0
+  Moose: 0
+  perl: v5.6.0
+resources:
+  license: http://dev.perl.org/licenses/
+version: 0.01
