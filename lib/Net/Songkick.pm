@@ -1,10 +1,6 @@
 =head1 NAME
 
-Net::Songkick
-
-=head1 SUMMARY
-
-Perl wrapper for the Songkick API
+Net::Songkick - Perl wrapper for the Songkick API
 
 =head1 SYNOPSIS
 
@@ -104,7 +100,7 @@ sub _request {
   }
 }
 
-=head2 $sk->get_upcoming_events({ ... options ... });
+=head2 $sk->get_events({ ... options ... });
 
 Gets a list of upcoming events from Songkick. Various parameters to control
 the events returned are supported for the full list see
