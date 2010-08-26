@@ -1,0 +1,23 @@
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
+
+use Net::Songkick;
+
+my $id = shift || 659462;
+
+my $sk = Net::Songkick->new({
+  api_key => $ENV{SONGKICK_API_KEY},
+});
+
+my @lists = $sk->get_setlist({
+  event_id => $id,
+});
+
+foreach my $l (@lists) {
+  print $l->displayName, "\n";
+  foreach (@{$l->setlist_items}) {
+    print '* ', $_->name, "\n";
+  }
+}
