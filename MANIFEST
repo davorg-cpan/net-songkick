@@ -19,3 +19,4 @@ t/pod.t
 META.yml
 ChangeLog
 bin/gigs
+bin/setlist
