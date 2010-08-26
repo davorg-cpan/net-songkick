@@ -6,4 +6,4 @@ Makefile.PL
 Net-Songkick-*
 _build/
 blib/
-
+*~
