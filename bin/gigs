@@ -14,8 +14,10 @@ my $evnts = $sk->get_upcoming_events({
   user => $user,
 });
 
+print "\n";
+
 foreach (@$evnts) {
   print $_->start->strftime('%A %d %B %Y'), "\n";
-  print ' ', $_->performances->[0]->artist->displayName, "\n";
-  print ' at ', $_->venue->displayName, "\n";
+  print ' ', $_->performances->[0]->artist->displayName;
+  print ' at ', $_->venue->displayName, "\n\n";
 }
