@@ -4,9 +4,11 @@ use strict;
 use warnings;
 
 use Moose;
+use DateTime::Format::Strptime;
 
 use Net::Songkick::Location;
 use Net::Songkick::Performance;
+use Net::Songkick::Venue;
 
 has $_ => (
     is => 'ro',
@@ -44,10 +46,25 @@ sub new_from_xml {
     }
 
     $self->{location} = Net::Songkick::Location->new_from_xml(
-        ($xml->findnodes('//location'))[0]
+        ($xml->findnodes('location'))[0]
     );
 
-    foreach ($xml->findnodes('//performance')) {
+    my $start_date = $xml->findvalue('start/@date');
+    my $start_time = $xml->findvalue('start/@time') || '00:00:00';
+
+    if ($start_date) {
+        my $p = DateTime::Format::Strptime->new(
+            pattern => '%Y-%m-%d %H:%M:%S',
+        );
+
+        $self->{start} = $p->parse_datetime("$start_date $start_time");
+    }
+
+    $self->{venue} = Net::Songkick::Venue->new_from_xml(
+        ($xml->findnodes('venue'))[0]
+    );
+
+    foreach ($xml->findnodes('performance')) {
         push @{$self->{performances}},
             Net::Songkick::Performance->new_from_xml($_);
     }

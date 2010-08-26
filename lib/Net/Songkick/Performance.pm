@@ -4,6 +4,8 @@ use strict;
 use warnings;
 use Moose;
 
+use Net::Songkick::Artist;
+
 has $_ => (
     is => 'ro',
     isa => 'Str',
@@ -23,6 +25,10 @@ sub new_from_xml {
     for (qw[displayName billing billingIndex id]) {
         $self->{$_} = $xml->findvalue("\@$_");
     }
+
+    $self->{artist} = Net::Songkick::Artist->new_from_xml(
+        ($xml->findnodes('artist'))[0]
+    );
 
     return $class->new($self);
 }
