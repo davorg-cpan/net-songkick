@@ -1,6 +1,12 @@
 Build.PL
 lib/Net/Songkick.pm
+lib/Net/Songkick/Artist.pm
+lib/Net/Songkick/Country.pm
 lib/Net/Songkick/Event.pm
+lib/Net/Songkick/Location.pm
+lib/Net/Songkick/MetroArea.pm
+lib/Net/Songkick/Performance.pm
+lib/Net/Songkick/Venue.pm
 MANIFEST			This list of files
 README
 Makefile.PL
