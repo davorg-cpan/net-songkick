@@ -1,14 +1,18 @@
-package Net::Songkick::Location;
+package Net::Songkick::Performance;
 
 use strict;
 use warnings;
-
 use Moose;
 
 has $_ => (
     is => 'ro',
     isa => 'Str',
-) for qw[lng lat city];
+) for qw[displayName billing billingIndex id];
+
+has artist => (
+    is => 'ro',
+    isa => 'Net::Songkick::Artist',
+);
 
 sub new_from_xml {
     my $class = shift;
@@ -16,7 +20,7 @@ sub new_from_xml {
 
     my $self = {};
 
-    foreach (qw[lng lat city]) {
+    for (qw[displayName billing billingIndex id]) {
         $self->{$_} = $xml->findvalue("\@$_");
     }
 

@@ -5,6 +5,9 @@ use warnings;
 
 use Moose;
 
+use Net::Songkick::Location;
+use Net::Songkick::Performance;
+
 has $_ => (
     is => 'ro',
     isa => 'Str',
@@ -17,7 +20,7 @@ has location => (
 
 has performances => (
     is => 'ro',
-    isa => 'ArrayRef[Net::Songkick::Performances]',
+    isa => 'ArrayRef[Net::Songkick::Performance]',
 );
 
 has start => (
@@ -38,6 +41,15 @@ sub new_from_xml {
 
     foreach (qw[type ticketsURI status uri displayName popularity id]) {
         $self->{$_} = $xml->findvalue("\@$_");
+    }
+
+    $self->{location} = Net::Songkick::Location->new_from_xml(
+        ($xml->findnodes('//location'))[0]
+    );
+
+    foreach ($xml->findnodes('//performance')) {
+        push @{$self->{performances}},
+            Net::Songkick::Performance->new_from_xml($_);
     }
 
     return $class->new($self);
