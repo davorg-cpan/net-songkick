@@ -1,5 +1,6 @@
 Build.PL
 lib/Net/Songkick.pm
+lib/Net/Songkick/Event.pm
 MANIFEST			This list of files
 README
 Makefile.PL
@@ -9,3 +10,4 @@ t/pod_coverage.t
 t/pod.t
 META.yml
 ChangeLog
+bin/gigs

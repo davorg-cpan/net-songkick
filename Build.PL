@@ -14,6 +14,7 @@ my $build = Module::Build->new(
 		Test::Pod::Coverage => 0,
 	},
         create_makefile_pl => 'traditional',
+        script_files => [ 'bin/gigs' ],
 );
 
 $build->create_build_script;
