@@ -44,7 +44,7 @@ package Net::Songkick;
 use strict;
 use warnings;
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 use Moose;
 
@@ -120,8 +120,11 @@ the events returned are supported for the full list see
 L<http://www.songkick.com/developer/event-search>.
 
 In addition, this method takes an extra parameter, B<format>, which control
-the format of the data returned. This can be either I<xml> or I<json>. If this
-parameter is omitted, then I<xml> is assumed.
+the format of the data returned. This can be either I<xml>, I<json> or
+I<perl>. If it is either I<xml> or I<json> then the method will return the
+raw XML or JSON from the Songkick API. If ii is I<perl> then this method
+will return a list of L<Net::Songkick::Event> objects. If this parameter is
+omitted, then I<perl> is assumed.
 
 =cut
 
@@ -148,7 +151,7 @@ sub get_events {
     foreach ($xp->findnodes('//event')) {
       push @$evnts, Net::Songkick::Event->new_from_xml($_);
     }
-    return $evnts;
+    return wantarray ? @$evnts : $evnts;
   } else {
     return $resp;
   }
