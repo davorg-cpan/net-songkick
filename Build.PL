@@ -9,7 +9,7 @@ my $build = Module::Build->new(
 		LWP::UserAgent => 0,
 		Moose	       => 0,
 		XML::LibXML    => 0,
-		DateTime       => 0,
+		DateTime::Format::Strptime => 0,
 	},
 	build_recommends => {
 		Test::Pod           => 0,
