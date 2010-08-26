@@ -49,6 +49,9 @@ our $VERSION = '0.01';
 use Moose;
 
 use LWP::UserAgent;
+use XML::LibXML;
+
+use Net::Songkick::Event;
 
 my $API_URL = 'http://api.songkick.com/api/3.0';
 my $EVT_URL = "$API_URL/events";
@@ -69,7 +72,7 @@ my %GIG_PRM = map { $_ => 1 } @GIG_PRM;
 my @SET_PRM = qw();
 my %SET_PRM = map { $_ => 1 } @SET_PRM;
 
-my $DEF_FMT = 'xml';
+my $DEF_FMT = 'perl';
 
 has api_key => (
 		is => 'ro',
@@ -100,6 +103,16 @@ sub _request {
   }
 }
 
+sub _formats {
+  my $self = shift;
+
+  my $ret_format = shift || $DEF_FMT;
+  my $api_format = $ret_format;
+  $api_format = 'xml' if $ret_format eq 'perl';
+
+  return ($ret_format, $api_format);
+}
+
 =head2 $sk->get_events({ ... options ... });
 
 Gets a list of upcoming events from Songkick. Various parameters to control
@@ -116,12 +129,9 @@ sub get_events {
   my $self = shift;
   my ($params) = @_;
 
-  my $format = $DEF_FMT;
-  if (exists $params->{format}) {
-    $format = lc delete $params->{format};
-  }
+  my ($ret_format, $api_format) = $self->_formats($params->{format});
 
-  my $url = "$EVT_URL.$format?apikey=" . $self->api_key;
+  my $url = "$EVT_URL.$api_format?apikey=" . $self->api_key;
 
   foreach (keys %$params) {
     if ($EVT_PRM{$_}) {
@@ -129,7 +139,19 @@ sub get_events {
     }
   }
 
-  return $self->_request($url);
+  my $resp = $self->_request($url);
+
+  if ($ret_format eq 'perl') {
+    my $evnts;
+
+    my $xp = XML::LibXML->new->parse_string($resp);
+    foreach ($xp->findnodes('//event')) {
+      push @$evnts, Net::Songkick::Event->new_from_xml($_);
+    }
+    return $evnts;
+  } else {
+    return $resp;
+  }
 }
 
 =head2 $sk->get_upcoming_events({ ... options ... });
@@ -148,10 +170,7 @@ sub get_upcoming_events {
 
   my ($params) = @_;
 
-  my $format = $DEF_FMT;
-  if (exists $params->{format}) {
-    $format = lc delete $params->{format};
-  }
+  my ($ret_format, $api_format) = $self->_formats($params->{format});
 
   my $user;
   if (exists $params->{user}) {
@@ -160,7 +179,7 @@ sub get_upcoming_events {
     die "user not passed to get_past_events\n";
   }
 
-  my $url = "$UPC_URL.$format?apikey=" . $self->api_key;
+  my $url = "$UPC_URL.$api_format?apikey=" . $self->api_key;
   $url =~ s/USERNAME/$user/;
 
   foreach (keys %$params) {
@@ -169,7 +188,19 @@ sub get_upcoming_events {
     }
   }
 
-  return $self->_request($url);
+  my $resp = $self->_request($url);
+
+  if ($ret_format eq 'perl') {
+    my $evnts;
+
+    my $xp = XML::LibXML->new->parse_string($resp);
+    foreach ($xp->findnodes('//event')) {
+      push @$evnts, Net::Songkick::Event->new_from_xml($_);
+    }
+    return $evnts;
+  } else {
+    return $resp;
+  }
 }
 
 =head2 $sk->get_past_events({ ... options ... });
@@ -189,10 +220,7 @@ sub get_past_events {
 
   my ($params) = @_;
 
-  my $format = $DEF_FMT;
-  if (exists $params->{format}) {
-    $format = lc delete $params->{format};
-  }
+  my ($ret_format, $api_format) = $self->_formats($params->{format});
 
   my $user;
   if (exists $params->{user}) {
@@ -201,7 +229,7 @@ sub get_past_events {
     die "user not passed to get_past_events\n";
   }
 
-  my $url = "$GIG_URL.$format?apikey=" . $self->api_key;
+  my $url = "$GIG_URL.$api_format?apikey=" . $self->api_key;
   $url =~ s/USERNAME/$user/;
 
   foreach (keys %$params) {
@@ -210,7 +238,19 @@ sub get_past_events {
     }
   }
 
-  return $self->_request($url);
+  my $resp = $self->_request($url);
+
+  if ($ret_format eq 'perl') {
+    my $evnts;
+
+    my $xp = XML::LibXML->new->parse_string($resp);
+    foreach ($xp->findnodes('//event')) {
+      push @$evnts, Net::Songkick::Event->new_from_xml($_);
+    }
+    return $evnts;
+  } else {
+    return $resp;
+  }
 }
 
 =head2 $sk->get_setlist({ ... options ... });
@@ -230,10 +270,7 @@ sub get_setlist {
 
   my ($params) = @_;
 
-  my $format = $DEF_FMT;
-  if (exists $params->{format}) {
-    $format = lc delete $params->{format};
-  }
+  my ($ret_format, $api_format) = $self->_formats($params->{format});
 
   my $event_id;
   if (exists $params->{event_id}) {
@@ -242,7 +279,7 @@ sub get_setlist {
     die "event_id not passed to get_setlist\n";
   }
 
-  my $url = "$SET_URL.$format?apikey=" . $self->api_key;
+  my $url = "$SET_URL.$api_format?apikey=" . $self->api_key;
   $url =~ s/EVENT_ID/$event_id/;
 
   foreach (keys %$params) {
