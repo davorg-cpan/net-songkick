@@ -1,0 +1,22 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+
+use XML::LibXML;
+use Net::Songkick;
+
+my $user = shift || 'davorg';
+my $sk = Net::Songkick->new({
+  api_key => $ENV{SONGKICK_API_KEY}
+});
+
+my $xml = $sk->get_upcoming_events({
+  user => $user,
+});
+
+my $xp = XML::LibXML->new->parse_string($xml);
+
+foreach ($xp->findnodes('//event/@displayName')) {
+  print $_->to_literal, "\n";
+}
