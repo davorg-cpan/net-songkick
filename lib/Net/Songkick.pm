@@ -57,7 +57,7 @@ my $API_URL = 'http://api.songkick.com/api/3.0';
 my $EVT_URL = "$API_URL/events";
 my $UPC_URL = "$API_URL/users/USERNAME/events";
 my $GIG_URL = "$API_URL/users/USERNAME/gigography";
-my $SET_URL = "$API_URL/events/EVENT_ID/setlists/";
+my $SET_URL = "$API_URL/events/EVENT_ID/setlists";
 
 my @EVT_PRM = qw(type artists artist_name artist_id venue_id setlist_item_name
 		 min_date max_date location);
