@@ -1,0 +1,9 @@
+Build
+ChangeLog
+META.yml
+MYMETA.yml
+Makefile.PL
+Net-Songkick-*
+_build/
+blib/
+
