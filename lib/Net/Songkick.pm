@@ -200,7 +200,7 @@ sub get_upcoming_events {
     foreach ($xp->findnodes('//event')) {
       push @$evnts, Net::Songkick::Event->new_from_xml($_);
     }
-    return $evnts;
+    return wantarray ? @$evnts : $evnts;
   } else {
     return $resp;
   }
@@ -250,7 +250,7 @@ sub get_past_events {
     foreach ($xp->findnodes('//event')) {
       push @$evnts, Net::Songkick::Event->new_from_xml($_);
     }
-    return $evnts;
+    return wantarray ? @$evnts : $evnts;
   } else {
     return $resp;
   }
