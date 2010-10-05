@@ -19,7 +19,7 @@ use Net::Songkick::Venue;
 has $_ => (
     is => 'ro',
     isa => 'Str',
-) for qw(type tickeetsUri status uri displayName popularity id);
+) for qw(type status uri displayName popularity id);
 
 has location => (
     is => 'ro',
@@ -57,7 +57,7 @@ sub new_from_xml {
 
     my $self = {};
 
-    foreach (qw[type ticketsURI status uri displayName popularity id]) {
+    foreach (qw[type status uri displayName popularity id]) {
         $self->{$_} = $xml->findvalue("\@$_");
     }
 
