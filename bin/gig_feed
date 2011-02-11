@@ -1,0 +1,40 @@
+#!/usr/bin/perl 
+
+eval 'exec /usr/bin/perl  -S $0 ${1+"$@"}'
+    if 0; # not running under some shell
+
+use strict;
+use warnings;
+
+use Net::Songkick;
+use XML::Feed;
+use DateTime;
+
+my $user = shift || 'davorg';
+my $sk = Net::Songkick->new({
+  api_key => $ENV{SONGKICK_API_KEY}
+});
+
+my $evnts = $sk->get_upcoming_events({
+  user => $user,
+});
+
+my $feed = XML::Feed->new;
+$feed->title("Forthcoming gigs for $user");
+$feed->link("http://songkick.com/users/$user/calendar");
+$feed->modified(DateTime->now);
+
+foreach (@$evnts) {
+  my $entry = XML::Feed::Entry->new;
+  $entry->title($_->performances->[0]->artist->displayName);
+  $entry->link($_->uri);
+  $entry->issued($_->start);
+  $entry->modified($_->start);
+  my $content = $_->performances->[0]->artist->displayName . 
+    ' at ' . $_->venue->displayName .
+    ' on ' . $_->start->strftime('%A %d %B %Y');
+  $entry->content(XML::Feed::Content->new({ body => $content }));
+  $feed->add_entry($entry);
+}
+
+print $feed->as_xml;
