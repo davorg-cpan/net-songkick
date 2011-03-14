@@ -59,6 +59,9 @@ my $EVT_URL = "$API_URL/events";
 my $UPC_URL = "$API_URL/users/USERNAME/events";
 my $GIG_URL = "$API_URL/users/USERNAME/gigography";
 my $SET_URL = "$API_URL/events/EVENT_ID/setlists";
+my $ART_URL = "$API_URL/artists/ARTIST_ID/calendar";
+my $AMB_URL = "$API_URL/artists/mbid:MB_ID/calendar";
+my $MET_URL = "$API_URL/metro/METRO_ID/calendar";
 
 my @EVT_PRM = qw(type artists artist_name artist_id venue_id setlist_item_name
 		 min_date max_date location);
@@ -255,6 +258,83 @@ sub get_past_events {
   } else {
     return $resp;
   }
+}
+
+=head2 $sk->get_artist_events({ ... options ... });
+
+=cut
+
+sub get_artist_events {
+  my $self = shift;
+
+  my ($params) = @_;
+
+  my ($ret_format, $api_format) = $self->_formats($params->{format});
+
+  my $url;
+  
+  if (exists $params->{artist_id}) {
+    $url = "$ART_URL.$api_format";
+    $url =~ s/ARTIST_ID/$params->{artist_id}/;
+  } elsif (exists $params->{mb_id}) {
+    $url = "$AMB_URL.$api_format";
+    $url =~ s/MB_ID/$params->{mb_id}/;
+  } else {
+    die "No artist id or MusicBrainz id passed to get_artist_events\n";
+  }
+  
+  $url .= '?api_key=' . $self->api_key;
+  
+  my $resp = $self->_request($url);
+
+  if ($ret_format eq 'perl') {
+    my $evnts;
+
+    my $xp = XML::LibXML->new->parse_string($resp);
+    foreach ($xp->findnodes('//event')) {
+      push @$evnts, Net::Songkick::Event->new_from_xml($_);
+    }
+    return wantarray ? @$evnts : $evnts;
+  } else {
+    return $resp;
+  }  
+}
+
+=head2 $sk->get_metro_events({ ... options ... });
+
+=cut
+
+sub get_metro_events {
+  my $self = shift;
+
+  my ($params) = @_;
+
+  my ($ret_format, $api_format) = $self->_formats($params->{format});
+
+  my $url;
+  
+  if (exists $params->{metro_id}) {
+    $url = "$MET_URL.$api_format";
+    $url =~ s/METRO_ID/$params->{metro_id}/;
+  } else {
+    die "No metro area id passed to get_metro_events\n";
+  }
+  
+  $url .= '?api_key=' . $self->api_key;
+  
+  my $resp = $self->_request($url);
+
+  if ($ret_format eq 'perl') {
+    my $evnts;
+
+    my $xp = XML::LibXML->new->parse_string($resp);
+    foreach ($xp->findnodes('//event')) {
+      push @$evnts, Net::Songkick::Event->new_from_xml($_);
+    }
+    return wantarray ? @$evnts : $evnts;
+  } else {
+    return $resp;
+  }  
 }
 
 =head2 $sk->get_setlist({ ... options ... });
