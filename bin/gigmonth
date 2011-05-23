@@ -1,0 +1,31 @@
+#!/usr/bin/perl 
+
+eval 'exec /usr/bin/perl  -S $0 ${1+"$@"}'
+    if 0; # not running under some shell
+
+use strict;
+use warnings;
+
+use Net::Songkick;
+
+my $user = shift || 'davorg';
+my $sk = Net::Songkick->new({
+  api_key => $ENV{SONGKICK_API_KEY}
+});
+
+my $evnts = $sk->get_upcoming_events({
+  user => $user,
+});
+
+my $cur_mon = '';
+
+foreach (@$evnts) {
+  if ($cur_mon ne $_->start->strftime('%B %Y')) {
+    print "\n", uc $_->start->strftime('%B %Y'), "\n";
+    $cur_mon = $_->start->strftime('%B %Y');
+  }
+
+  print '* ', $_->start->strftime('%A %d'), "\n";
+  print '  ', $_->performances->[0]->artist->displayName;
+  print ' at ', $_->venue->displayName, "\n";
+}
