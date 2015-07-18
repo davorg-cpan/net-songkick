@@ -1,9 +1,13 @@
+Net-Songkick-*.tar.gz
+Net-Songkick/
 Build
+Changes
 ChangeLog
+META.json
 META.yml
+MYMETA.json
 MYMETA.yml
 Makefile.PL
-Net-Songkick-*
 _build/
 blib/
-*~
+cover_db/
