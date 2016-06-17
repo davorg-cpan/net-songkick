@@ -96,6 +96,28 @@ sub _build_ua {
   return LWP::UserAgent->new;
 }
 
+has api_format => (
+  is => 'ro',
+  isa => 'Str',
+  lazy_build => 1,
+);
+
+sub _build_api_format {
+  my $format = $_[0]->return_format;
+  $format = 'xml' if $format eq 'perl';
+  return $format;
+}
+
+has return_format => (
+  is => 'ro',
+  isa => 'Str',
+  lazy_build => 1,
+);
+
+sub _build_return_format {
+  return 'perl';
+}
+
 sub _request {
   my $self = shift;
   my ($url) = @_;
@@ -110,11 +132,7 @@ sub _request {
 sub _formats {
   my $self = shift;
 
-  my $ret_format = shift || $DEF_FMT;
-  my $api_format = $ret_format;
-  $api_format = 'xml' if $ret_format eq 'perl';
-
-  return ($ret_format, $api_format);
+  return ($self->return_format, $self->api_format);
 }
 
 =head2 $sk->get_events({ ... options ... });
