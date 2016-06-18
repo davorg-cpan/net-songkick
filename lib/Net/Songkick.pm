@@ -54,14 +54,6 @@ use XML::LibXML;
 use Net::Songkick::Event;
 use Net::Songkick::SetList;
 
-my $API_URL = 'http://api.songkick.com/api/3.0';
-my $EVT_URL = "$API_URL/events";
-my $UPC_URL = "$API_URL/users/USERNAME/events";
-my $GIG_URL = "$API_URL/users/USERNAME/gigography";
-my $ART_URL = "$API_URL/artists/ARTIST_ID/calendar";
-my $AMB_URL = "$API_URL/artists/mbid:MB_ID/calendar";
-my $MET_URL = "$API_URL/metro/METRO_ID/calendar";
-
 my @EVT_PRM = qw(type artists artist_name artist_id venue_id setlist_item_name
 		 min_date max_date location);
 my %EVT_PRM = map { $_ => 1 } @EVT_PRM;
@@ -117,6 +109,75 @@ sub _build_return_format {
   return 'perl';
 }
 
+has api_url => (
+  is => 'ro',
+  isa => 'Str',
+  lazy_build => 1,
+);
+
+sub _build_api_url {
+  return 'http://api.songkick.com/api/3.0',
+}
+
+has events_url => (
+  is => 'ro',
+  isa => 'Str',
+  lazy_build => 1,
+);
+
+sub _build_events_url {
+  return shift->api_url . '/events';
+}
+
+has user_events_url => (
+  is => 'ro',
+  isa => 'Str',
+  lazy_build => 1,
+);
+
+sub _build_user_events_url {
+  return shift->api_url . '/users/USERNAME/events';
+}
+
+has user_gigs_url => (
+  is => 'ro',
+  isa => 'Str',
+  lazy_build => 1,
+);
+
+sub _build_user_gigs_url {
+  return shift->api_url . '/users/USERNAME/gigography';
+}
+
+has artists_url => (
+  is => 'ro',
+  isa => 'Str',
+  lazy_build => 1,
+);
+
+sub _build_artists_url {
+  return shift->api_url . '/artists/ARTIST_ID/calendar';
+}
+
+has artists_mb_url => (
+  is => 'ro',
+  isa => 'Str',
+  lazy_build => 1,
+);
+
+sub _build_artists_mb_url {
+  return shift->api_url . '/artists/mbid:MB_ID/calendar';
+}
+
+has metro_url => (
+  is => 'ro',
+  isa => 'Str',
+  lazy_build => 1,
+);
+
+sub _build_metro_url {
+  return shift->api_url . '/metro/METRO_ID/calendar';
+}
 sub _request {
   my $self = shift;
   my ($url) = @_;
@@ -155,7 +216,7 @@ sub get_events {
 
   my ($ret_format, $api_format) = $self->_formats($params->{format});
 
-  my $url = "$EVT_URL.$api_format?apikey=" . $self->api_key;
+  my $url = $self->events_url . ".$api_format?apikey=" . $self->api_key;
 
   foreach (keys %$params) {
     if ($EVT_PRM{$_}) {
@@ -203,7 +264,7 @@ sub get_upcoming_events {
     die "user not passed to get_past_events\n";
   }
 
-  my $url = "$UPC_URL.$api_format?apikey=" . $self->api_key;
+  my $url = $self->user_events_url . ".$api_format?apikey=" . $self->api_key;
   $url =~ s/USERNAME/$user/;
 
   foreach (keys %$params) {
@@ -253,7 +314,7 @@ sub get_past_events {
     die "user not passed to get_past_events\n";
   }
 
-  my $url = "$GIG_URL.$api_format?apikey=" . $self->api_key;
+  my $url = $self->user_gigs_url . ".$api_format?apikey=" . $self->api_key;
   $url =~ s/USERNAME/$user/;
 
   foreach (keys %$params) {
@@ -291,10 +352,10 @@ sub get_artist_events {
   my $url;
   
   if (exists $params->{artist_id}) {
-    $url = "$ART_URL.$api_format";
+    $url = $self->artists_url . ".$api_format";
     $url =~ s/ARTIST_ID/$params->{artist_id}/;
   } elsif (exists $params->{mb_id}) {
-    $url = "$AMB_URL.$api_format";
+    $url = $self->artists_mb_url . ".$api_format";
     $url =~ s/MB_ID/$params->{mb_id}/;
   } else {
     die "No artist id or MusicBrainz id passed to get_artist_events\n";
@@ -331,7 +392,7 @@ sub get_metro_events {
   my $url;
   
   if (exists $params->{metro_id}) {
-    $url = "$MET_URL.$api_format";
+    $url = $self->metro_url . ".$api_format";
     $url =~ s/METRO_ID/$params->{metro_id}/;
   } else {
     die "No metro area id passed to get_metro_events\n";
