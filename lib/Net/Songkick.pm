@@ -72,7 +72,7 @@ sub _build_ua {
   return LWP::UserAgent->new;
 }
 
-has api_format => (
+has ['api_format', 'return_format' ] => (
   is => 'ro',
   isa => 'Str',
   lazy_build => 1,
@@ -84,17 +84,12 @@ sub _build_api_format {
   return $format;
 }
 
-has return_format => (
-  is => 'ro',
-  isa => 'Str',
-  lazy_build => 1,
-);
-
 sub _build_return_format {
   return 'perl';
 }
 
-has api_url => (
+has ['api_url', 'events_url', 'user_events_url', 'user_gigs_url',
+     'artists_url', 'artists_mb_url', 'metro_url'] => (
   is => 'ro',
   isa => 'Str',
   lazy_build => 1,
@@ -104,17 +99,31 @@ sub _build_api_url {
   return 'http://api.songkick.com/api/3.0',
 }
 
-has events_url => (
-  is => 'ro',
-  isa => 'Str',
-  lazy_build => 1,
-);
-
 sub _build_events_url {
   return shift->api_url . '/events';
 }
 
-has events_params => (
+sub _build_user_events_url {
+  return shift->api_url . '/users/USERNAME/events';
+}
+
+sub _build_user_gigs_url {
+  return shift->api_url . '/users/USERNAME/gigography';
+}
+
+sub _build_artists_url {
+  return shift->api_url . '/artists/ARTIST_ID/calendar';
+}
+
+sub _build_artists_mb_url {
+  return shift->api_url . '/artists/mbid:MB_ID/calendar';
+}
+
+sub _build_metro_url {
+  return shift->api_url . '/metro/METRO_ID/calendar';
+}
+
+has ['events_params', 'user_events_params', 'user_gigs_params'] => (
   is => 'ro',
   isa => 'HashRef',
   lazy_build => 1,
@@ -127,43 +136,11 @@ sub _build_events_params {
   return { map { $_ => 1 } @params };
 }
 
-has user_events_url => (
-  is => 'ro',
-  isa => 'Str',
-  lazy_build => 1,
-);
-
-sub _build_user_events_url {
-  return shift->api_url . '/users/USERNAME/events';
-}
-
-has user_events_params => (
-  is => 'ro',
-  isa => 'HashRef',
-  lazy_build => 1,
-);
-
 sub _build_user_events_params {
   my @params = ( keys %{shift->events_params}, 'attendance' );
 
   return { map { $_ => 1 } @params };
 }
-
-has user_gigs_url => (
-  is => 'ro',
-  isa => 'Str',
-  lazy_build => 1,
-);
-
-sub _build_user_gigs_url {
-  return shift->api_url . '/users/USERNAME/gigography';
-}
-
-has user_gigs_params => (
-  is => 'ro',
-  isa => 'HashRef',
-  lazy_build => 1,
-);
 
 sub _build_user_gigs_params {
   my @params = ( 'page' );
@@ -171,35 +148,6 @@ sub _build_user_gigs_params {
   return { map { $_ => 1 } @params };
 }
 
-has artists_url => (
-  is => 'ro',
-  isa => 'Str',
-  lazy_build => 1,
-);
-
-sub _build_artists_url {
-  return shift->api_url . '/artists/ARTIST_ID/calendar';
-}
-
-has artists_mb_url => (
-  is => 'ro',
-  isa => 'Str',
-  lazy_build => 1,
-);
-
-sub _build_artists_mb_url {
-  return shift->api_url . '/artists/mbid:MB_ID/calendar';
-}
-
-has metro_url => (
-  is => 'ro',
-  isa => 'Str',
-  lazy_build => 1,
-);
-
-sub _build_metro_url {
-  return shift->api_url . '/metro/METRO_ID/calendar';
-}
 sub _request {
   my $self = shift;
   my ($url) = @_;
