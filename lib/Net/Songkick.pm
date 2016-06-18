@@ -159,12 +159,6 @@ sub _request {
   }
 }
 
-sub _formats {
-  my $self = shift;
-
-  return ($self->return_format, $self->api_format);
-}
-
 =head2 $sk->get_events({ ... options ... });
 
 Gets a list of upcoming events from Songkick. Various parameters to control
@@ -184,9 +178,7 @@ sub get_events {
   my $self = shift;
   my ($params) = @_;
 
-  my ($ret_format, $api_format) = $self->_formats($params->{format});
-
-  my $url = $self->events_url . ".$api_format?apikey=" . $self->api_key;
+  my $url = $self->events_url . '.' . $self->api_format . '?apikey=' . $self->api_key;
 
   foreach (keys %$params) {
     if ($self->events_params->{$_}) {
@@ -196,7 +188,7 @@ sub get_events {
 
   my $resp = $self->_request($url);
 
-  if ($ret_format eq 'perl') {
+  if ($self->return_format eq 'perl') {
     my $evnts;
 
     my $xp = XML::LibXML->new->parse_string($resp);
@@ -225,8 +217,6 @@ sub get_upcoming_events {
 
   my ($params) = @_;
 
-  my ($ret_format, $api_format) = $self->_formats($params->{format});
-
   my $user;
   if (exists $params->{user}) {
     $user = delete $params->{user};
@@ -234,7 +224,7 @@ sub get_upcoming_events {
     die "user not passed to get_past_events\n";
   }
 
-  my $url = $self->user_events_url . ".$api_format?apikey=" . $self->api_key;
+  my $url = $self->user_events_url . '.' . $self->api_format . '?apikey=' . $self->api_key;
   $url =~ s/USERNAME/$user/;
 
   foreach (keys %$params) {
@@ -245,7 +235,7 @@ sub get_upcoming_events {
 
   my $resp = $self->_request($url);
 
-  if ($ret_format eq 'perl') {
+  if ($self->return_format eq 'perl') {
     my $evnts;
 
     my $xp = XML::LibXML->new->parse_string($resp);
@@ -275,8 +265,6 @@ sub get_past_events {
 
   my ($params) = @_;
 
-  my ($ret_format, $api_format) = $self->_formats($params->{format});
-
   my $user;
   if (exists $params->{user}) {
     $user = delete $params->{user};
@@ -284,7 +272,7 @@ sub get_past_events {
     die "user not passed to get_past_events\n";
   }
 
-  my $url = $self->user_gigs_url . ".$api_format?apikey=" . $self->api_key;
+  my $url = $self->user_gigs_url . '.' . $self->api_format . '?apikey=' . $self->api_key;
   $url =~ s/USERNAME/$user/;
 
   foreach (keys %$params) {
@@ -295,7 +283,7 @@ sub get_past_events {
 
   my $resp = $self->_request($url);
 
-  if ($ret_format eq 'perl') {
+  if ($self->return_format eq 'perl') {
     my $evnts;
 
     my $xp = XML::LibXML->new->parse_string($resp);
@@ -317,15 +305,13 @@ sub get_artist_events {
 
   my ($params) = @_;
 
-  my ($ret_format, $api_format) = $self->_formats($params->{format});
-
   my $url;
   
   if (exists $params->{artist_id}) {
-    $url = $self->artists_url . ".$api_format";
+    $url = $self->artists_url . '.' . $self->api_format;
     $url =~ s/ARTIST_ID/$params->{artist_id}/;
   } elsif (exists $params->{mb_id}) {
-    $url = $self->artists_mb_url . ".$api_format";
+    $url = $self->artists_mb_url . '.' . $self->api_format;
     $url =~ s/MB_ID/$params->{mb_id}/;
   } else {
     die "No artist id or MusicBrainz id passed to get_artist_events\n";
@@ -335,7 +321,7 @@ sub get_artist_events {
   
   my $resp = $self->_request($url);
 
-  if ($ret_format eq 'perl') {
+  if ($self->return_format eq 'perl') {
     my $evnts;
 
     my $xp = XML::LibXML->new->parse_string($resp);
@@ -357,22 +343,18 @@ sub get_metro_events {
 
   my ($params) = @_;
 
-  my ($ret_format, $api_format) = $self->_formats($params->{format});
-
   my $url;
   
   if (exists $params->{metro_id}) {
-    $url = $self->metro_url . ".$api_format";
+    $url = $self->metro_url . '.' . $self->api_format . '?api_key=' . $self->api_key;
     $url =~ s/METRO_ID/$params->{metro_id}/;
   } else {
     die "No metro area id passed to get_metro_events\n";
   }
-  
-  $url .= '?api_key=' . $self->api_key;
-  
+    
   my $resp = $self->_request($url);
 
-  if ($ret_format eq 'perl') {
+  if ($self->return_format eq 'perl') {
     my $evnts;
 
     my $xp = XML::LibXML->new->parse_string($resp);
