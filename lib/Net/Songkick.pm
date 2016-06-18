@@ -54,21 +54,6 @@ use XML::LibXML;
 use Net::Songkick::Event;
 use Net::Songkick::SetList;
 
-my @EVT_PRM = qw(type artists artist_name artist_id venue_id setlist_item_name
-		 min_date max_date location);
-my %EVT_PRM = map { $_ => 1 } @EVT_PRM;
-
-my @UPC_PRM = (@EVT_PRM, 'attendance');
-my %UPC_PRM = map { $_ => 1 } @UPC_PRM;
-
-my @GIG_PRM = qw(page);
-my %GIG_PRM = map { $_ => 1 } @GIG_PRM;
-
-my @SET_PRM = qw();
-my %SET_PRM = map { $_ => 1 } @SET_PRM;
-
-my $DEF_FMT = 'perl';
-
 has api_key => (
   is => 'ro',
   isa => 'Str',
@@ -129,6 +114,19 @@ sub _build_events_url {
   return shift->api_url . '/events';
 }
 
+has events_params => (
+  is => 'ro',
+  isa => 'HashRef',
+  lazy_build => 1,
+);
+
+sub _build_events_params {
+  my @params = qw(type artists artist_name artist_id venue_id
+		  min_date max_date location);
+
+  return { map { $_ => 1 } @params };
+}
+
 has user_events_url => (
   is => 'ro',
   isa => 'Str',
@@ -139,6 +137,18 @@ sub _build_user_events_url {
   return shift->api_url . '/users/USERNAME/events';
 }
 
+has user_events_params => (
+  is => 'ro',
+  isa => 'HashRef',
+  lazy_build => 1,
+);
+
+sub _build_user_events_params {
+  my @params = ( keys %{shift->events_params}, 'attendance' );
+
+  return { map { $_ => 1 } @params };
+}
+
 has user_gigs_url => (
   is => 'ro',
   isa => 'Str',
@@ -147,6 +157,18 @@ has user_gigs_url => (
 
 sub _build_user_gigs_url {
   return shift->api_url . '/users/USERNAME/gigography';
+}
+
+has user_gigs_params => (
+  is => 'ro',
+  isa => 'HashRef',
+  lazy_build => 1,
+);
+
+sub _build_user_gigs_params {
+  my @params = ( 'page' );
+
+  return { map { $_ => 1 } @params };
 }
 
 has artists_url => (
@@ -219,7 +241,7 @@ sub get_events {
   my $url = $self->events_url . ".$api_format?apikey=" . $self->api_key;
 
   foreach (keys %$params) {
-    if ($EVT_PRM{$_}) {
+    if ($self->events_params->{$_}) {
       $url .= "&$_=$params->{$_}";
     }
   }
@@ -268,7 +290,7 @@ sub get_upcoming_events {
   $url =~ s/USERNAME/$user/;
 
   foreach (keys %$params) {
-    if ($UPC_PRM{$_}) {
+    if ($self->user_events_params->{$_}) {
       $url .= "&$_=$params->{$_}";
     }
   }
@@ -318,7 +340,7 @@ sub get_past_events {
   $url =~ s/USERNAME/$user/;
 
   foreach (keys %$params) {
-    if ($GIG_PRM{$_}) {
+    if ($self->user_gigs_params->{$_}) {
       $url .= "&$_=$params->{$_}";
     }
   }
