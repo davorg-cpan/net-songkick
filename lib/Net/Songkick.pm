@@ -58,7 +58,6 @@ my $API_URL = 'http://api.songkick.com/api/3.0';
 my $EVT_URL = "$API_URL/events";
 my $UPC_URL = "$API_URL/users/USERNAME/events";
 my $GIG_URL = "$API_URL/users/USERNAME/gigography";
-my $SET_URL = "$API_URL/events/EVENT_ID/setlists";
 my $ART_URL = "$API_URL/artists/ARTIST_ID/calendar";
 my $AMB_URL = "$API_URL/artists/mbid:MB_ID/calendar";
 my $MET_URL = "$API_URL/metro/METRO_ID/calendar";
@@ -353,56 +352,6 @@ sub get_metro_events {
   } else {
     return $resp;
   }  
-}
-
-=head2 $sk->get_setlist({ ... options ... });
-
-Returns information about a set list from a gig. It supports the B<format>
-parameter.
-
-This method also has a mandatory parameter called B<event_id>. This is the
-Songkick identifier for the gig that you want the set list for. For more
-details about this parameter, see
-L<http://www.songkick.com/developer/setlists>.
-
-=cut
-
-sub get_setlist {
-  my $self = shift;
-
-  my ($params) = @_;
-
-  my ($ret_format, $api_format) = $self->_formats($params->{format});
-
-  my $event_id;
-  if (exists $params->{event_id}) {
-    $event_id = delete $params->{event_id};
-  } else {
-    die "event_id not passed to get_setlist\n";
-  }
-
-  my $url = "$SET_URL.$api_format?apikey=" . $self->api_key;
-  $url =~ s/EVENT_ID/$event_id/;
-
-  foreach (keys %$params) {
-    if ($SET_PRM{$_}) {
-      $url .= "&$_=$params->{$_}";
-    }
-  }
-
-  my $resp = $self->_request($url);
-
-  if ($ret_format eq 'perl') {
-    my $setlists;
-
-    my $xp = XML::LibXML->new->parse_string($resp);
-    foreach ($xp->findnodes('//setlist')) {
-      push @$setlists, Net::Songkick::SetList->new_from_xml($_);
-    }
-    return wantarray ? @$setlists : $setlists;
-  } else {
-    return $self->_request($url);
-  }
 }
 
 =head1 AUTHOR
