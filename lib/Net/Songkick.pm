@@ -54,7 +54,6 @@ use XML::LibXML;
 use JSON;
 
 use Net::Songkick::Event;
-use Net::Songkick::SetList;
 
 has api_key => (
   is => 'ro',
