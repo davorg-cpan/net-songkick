@@ -21,27 +21,6 @@ has displayName => (
     isa => 'Str',
 );
 
-=head1 METHODS
-
-=head2 Net::Songkick::Event->new_from_xml
-
-Creates a new Net::Songkick::Country object from an XML::Element object that
-has been created from an <ocuntry> ... </country> element in the XML returned
-from a Songkick API request.
-
-=cut
-
-sub new_from_xml {
-    my $class = shift;
-    my ($xml) = @_;
-
-    my $self = {};
-
-    $self->{displayName} = $xml->findvalue('@displayName');
-
-    return $class->new($self);
-}
-
 =head1 AUTHOR
 
 Dave Cross <dave@mag-sol.com>

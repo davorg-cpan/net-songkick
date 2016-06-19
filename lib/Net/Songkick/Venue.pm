@@ -32,34 +32,6 @@ has metroArea => (
 # Backwards compatibility
 sub metro_area { return $_[0]->metroArea }
 
-=head1 METHODS
-
-=head2 Net::Songkick::Venue->new_from_xml
-
-Creates a new Net::Songkick::Venue object from an XML::Element object that
-has been created from an <venue> ... </venue> element in the XML returned
-from a Songkick API request.
-
-=cut
-
-sub new_from_xml {
-    my $class = shift;
-    my ($xml) = @_;
-
-    my $self = {};
-
-    foreach (qw[uri lat id lng displayName]) {
-        $self->{$_} = $xml->findvalue("\@$_");
-    }
-
-    $self->{metro_area} =
-        Net::Songkick::MetroArea->new_from_xml(
-            ($xml->findnodes('metroArea'))[0]
-        );
-
-    return $class->new($self);
-}
-
 =head1 AUTHOR
 
 Dave Cross <dave@mag-sol.com>

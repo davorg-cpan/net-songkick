@@ -21,30 +21,6 @@ has $_ => (
     isa => 'Str',
 ) for qw[lng lat city];
 
-=head1 METHODS
-
-=head2 Net::Songkick::Location->new_from_xml
-
-Creates a new Net::Songkick::Location object from an XML::Element object that
-has been created from a <location> ... </location> element in the XML returned
-from a Songkick API request.
-
-=cut
-
-
-sub new_from_xml {
-    my $class = shift;
-    my ($xml) = @_;
-
-    my $self = {};
-
-    foreach (qw[lng lat city]) {
-        $self->{$_} = $xml->findvalue("\@$_");
-    }
-
-    return $class->new($self);
-}
-
 =head1 AUTHOR
 
 Dave Cross <dave@mag-sol.com>

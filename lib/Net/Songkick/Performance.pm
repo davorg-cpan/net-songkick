@@ -28,33 +28,6 @@ has artist => (
     coerce => 1,
 );
 
-=head1 METHODS
-
-=head2 Net::Songkick::Performance->new_from_xml
-
-Creates a new Net::Songkick::Performance object from an XML::Element object
-that has been created from a <performance> ... </performance> element in the
-XML returned from a Songkick API request.
-
-=cut
-
-sub new_from_xml {
-    my $class = shift;
-    my ($xml) = @_;
-
-    my $self = {};
-
-    for (qw[displayName billing billingIndex id]) {
-        $self->{$_} = $xml->findvalue("\@$_");
-    }
-
-    $self->{artist} = Net::Songkick::Artist->new_from_xml(
-        ($xml->findnodes('artist'))[0]
-    );
-
-    return $class->new($self);
-}
-
 =head1 AUTHOR
 
 Dave Cross <dave@mag-sol.com>

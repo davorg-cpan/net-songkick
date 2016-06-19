@@ -72,53 +72,6 @@ around BUILDARGS => sub {
     $class->$orig(\%args);
 };
 
-=head1 METHODS
-
-=head2 Net::Songkick::Event->new_from_xml
-
-Creates a new Net::Songkick::Event object from an XML::Element object that
-has been created from an <event> ... </event> element in the XML returned
-from a Songkick API request.
-
-=cut
-
-sub new_from_xml {
-    my $class = shift;
-    my ($xml) = @_;
-
-    my $self = {};
-
-    foreach (qw[type status uri displayName popularity id]) {
-        $self->{$_} = $xml->findvalue("\@$_");
-    }
-
-    $self->{location} = Net::Songkick::Location->new_from_xml(
-        ($xml->findnodes('location'))[0]
-    );
-
-    my $start_date = $xml->findvalue('start/@date');
-    my $start_time = $xml->findvalue('start/@time') || '00:00:00';
-
-    if ($start_date) {
-        my $p = DateTime::Format::Strptime->new(
-            pattern => '%Y-%m-%d %H:%M:%S',
-        );
-
-        $self->{start} = $p->parse_datetime("$start_date $start_time");
-    }
-
-    $self->{venue} = Net::Songkick::Venue->new_from_xml(
-        ($xml->findnodes('venue'))[0]
-    );
-
-    foreach ($xml->findnodes('performance')) {
-        push @{$self->{performances}},
-            Net::Songkick::Performance->new_from_xml($_);
-    }
-
-    return $class->new($self);
-}
-
 =head1 AUTHOR
 
 Dave Cross <dave@mag-sol.com>
