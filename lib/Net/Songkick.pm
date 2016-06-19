@@ -210,13 +210,13 @@ sub get_events {
   my $resp = $self->_request($url, \%req_args);
 
   if ($self->return_format eq 'perl') {
-    my $evnts;
 
-    my $xp = XML::LibXML->new->parse_string($resp);
-    foreach ($xp->findnodes('//event')) {
-      push @$evnts, Net::Songkick::Event->new_from_xml($_);
+    my $data = $self->json_decoder->decode($resp);
+    my $events;
+    foreach (@{$data->{resultsPage}{results}{event}}) {
+      push @$events, Net::Songkick::Event->new($_);
     }
-    return wantarray ? @$evnts : $evnts;
+    return wantarray ? @$events : $events;
   } else {
     return $resp;
   }
@@ -267,6 +267,8 @@ sub get_upcoming_events {
       push @$events, Net::Songkick::Event->new($_);
     }
     return wantarray ? @$events : $events;
+  } else {
+    return $resp;
   }
 }
 
@@ -309,13 +311,12 @@ sub get_past_events {
   my $resp = $self->_request($url, \%req_args);
 
   if ($self->return_format eq 'perl') {
-    my $evnts;
-
-    my $xp = XML::LibXML->new->parse_string($resp);
-    foreach ($xp->findnodes('//event')) {
-      push @$evnts, Net::Songkick::Event->new_from_xml($_);
+    my $data = $self->json_decoder->decode($resp);
+    my $events;
+    foreach (@{$data->{resultsPage}{results}{event}}) {
+      push @$events, Net::Songkick::Event->new($_);
     }
-    return wantarray ? @$evnts : $evnts;
+    return wantarray ? @$events : $events;
   } else {
     return $resp;
   }
@@ -347,13 +348,12 @@ sub get_artist_events {
   my $resp = $self->_request($url);
 
   if ($self->return_format eq 'perl') {
-    my $evnts;
-
-    my $xp = XML::LibXML->new->parse_string($resp);
-    foreach ($xp->findnodes('//event')) {
-      push @$evnts, Net::Songkick::Event->new_from_xml($_);
+    my $data = $self->json_decoder->decode($resp);
+    my $events;
+    foreach (@{$data->{resultsPage}{results}{event}}) {
+      push @$events, Net::Songkick::Event->new($_);
     }
-    return wantarray ? @$evnts : $evnts;
+    return wantarray ? @$events : $events;
   } else {
     return $resp;
   }  
@@ -382,13 +382,12 @@ sub get_metro_events {
   my $resp = $self->_request($url);
 
   if ($self->return_format eq 'perl') {
-    my $evnts;
-
-    my $xp = XML::LibXML->new->parse_string($resp);
-    foreach ($xp->findnodes('//event')) {
-      push @$evnts, Net::Songkick::Event->new_from_xml($_);
+    my $data = $self->json_decoder->decode($resp);
+    my $events;
+    foreach (@{$data->{resultsPage}{results}{event}}) {
+      push @$events, Net::Songkick::Event->new($_);
     }
-    return wantarray ? @$evnts : $evnts;
+    return wantarray ? @$events : $events;
   } else {
     return $resp;
   }  
