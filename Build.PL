@@ -10,6 +10,7 @@ my $build = Module::Build->new(
 		Moose	       => 0,
 		XML::LibXML    => 0,
                 URI            => 0,
+                JSON           => 0,
 		DateTime::Format::Strptime => 0,
 	},
 	build_recommends => {
