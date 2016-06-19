@@ -23,6 +23,25 @@ has 'country' => (
     isa => 'Net::Songkick::Country',
 );
 
+around BUILDARGS => sub {
+    my $orig  = shift;
+    my $class = shift;
+
+    my %args;
+    if (@_ == 1) {
+        %args = %{$_[0]};
+    } else {
+        %args = @_;
+    }
+
+    if (exists $args{country}
+        and ref $args{country} ne 'Net::Songkick::Country') {
+        $args{country} = Net::Songkick::Country->new($args{country});
+    }
+
+    $class->$orig(\%args);
+};
+
 =head1 METHODS
 
 =head2 Net::Songkick::MetroArea->new_from_xml

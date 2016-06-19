@@ -18,10 +18,33 @@ has $_ => (
     isa => 'Str',
 ) for qw[uri lat id lng displayName];
 
-has metro_area => (
+has metroArea => (
     is => 'ro',
     isa => 'Net::Songkick::MetroArea',
 );
+
+# Backwards compatibility
+sub metro_area { return $_[0]->metroArea }
+
+around BUILDARGS => sub {
+    my $orig  = shift;
+    my $class = shift;
+
+    my %args;
+    if (@_ == 1) {
+        %args = %{$_[0]};
+    } else {
+        %args = @_;
+    }
+
+    if (exists $args{metroArea}
+        and ref $args{metroArea} ne 'Net::Songkick::MetroArea') {
+        $args{metroArea} = Net::Songkick::MetroArea->new($args{metroArea});
+    }
+
+    $class->$orig(\%args);
+};
+
 
 =head1 METHODS
 
