@@ -10,6 +10,11 @@ use strict;
 use warnings;
 
 use Moose;
+use Moose::Util::TypeConstraints;
+
+coerce 'Net::Songkick::Location',
+  from 'HashRef',
+  via { Net::Songkick::Location->new($_) };
 
 has $_ => (
     is => 'ro',

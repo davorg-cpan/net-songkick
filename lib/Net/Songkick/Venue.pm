@@ -10,8 +10,13 @@ use strict;
 use warnings;
 
 use Moose;
+use Moose::Util::TypeConstraints;
 
 use Net::Songkick::MetroArea;
+
+coerce 'Net::Songkick::Venue',
+  from 'HashRef',
+  via { Net::Songkick::Venue->new($_) };
 
 has $_ => (
     is => 'ro',
@@ -21,30 +26,11 @@ has $_ => (
 has metroArea => (
     is => 'ro',
     isa => 'Net::Songkick::MetroArea',
+    coerce => 1,
 );
 
 # Backwards compatibility
 sub metro_area { return $_[0]->metroArea }
-
-around BUILDARGS => sub {
-    my $orig  = shift;
-    my $class = shift;
-
-    my %args;
-    if (@_ == 1) {
-        %args = %{$_[0]};
-    } else {
-        %args = @_;
-    }
-
-    if (exists $args{metroArea}
-        and ref $args{metroArea} ne 'Net::Songkick::MetroArea') {
-        $args{metroArea} = Net::Songkick::MetroArea->new($args{metroArea});
-    }
-
-    $class->$orig(\%args);
-};
-
 
 =head1 METHODS
 

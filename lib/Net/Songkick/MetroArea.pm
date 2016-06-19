@@ -10,8 +10,14 @@ use strict;
 use warnings;
 
 use Moose;
+use Moose::Util::TypeConstraints;
 
 use Net::Songkick::Country;
+
+coerce 'Net::Songkick::MetroArea',
+  from 'HashRef',
+  via { Net::Songkick::MetroArea->new($_) };
+
 
 has $_ => (
     is => 'ro',
@@ -21,26 +27,8 @@ has $_ => (
 has 'country' => (
     is => 'ro',
     isa => 'Net::Songkick::Country',
+    coerce => 1,
 );
-
-around BUILDARGS => sub {
-    my $orig  = shift;
-    my $class = shift;
-
-    my %args;
-    if (@_ == 1) {
-        %args = %{$_[0]};
-    } else {
-        %args = @_;
-    }
-
-    if (exists $args{country}
-        and ref $args{country} ne 'Net::Songkick::Country') {
-        $args{country} = Net::Songkick::Country->new($args{country});
-    }
-
-    $class->$orig(\%args);
-};
 
 =head1 METHODS
 

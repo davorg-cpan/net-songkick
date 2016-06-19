@@ -10,6 +10,11 @@ use strict;
 use warnings;
 
 use Moose;
+use Moose::Util::TypeConstraints;
+
+coerce 'Net::Songkick::Country',
+  from 'HashRef',
+  via { Net::Songkick::Country->new($_) };
 
 has displayName => (
     is => 'ro',

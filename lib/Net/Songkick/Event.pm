@@ -10,8 +10,9 @@ use strict;
 use warnings;
 
 use Moose;
-use DateTime::Format::Strptime;
+use DateTime;
 
+use Net::Songkick::Types;
 use Net::Songkick::Location;
 use Net::Songkick::Performance;
 use Net::Songkick::Venue;
@@ -24,6 +25,7 @@ has $_ => (
 has location => (
     is => 'ro',
     isa => 'Net::Songkick::Location',
+    coerce => 1,
 );
 
 has performances => (
@@ -33,13 +35,17 @@ has performances => (
 
 has start => (
     is => 'ro',
-    isa => 'DateTime',
+    isa => 'Net::Songkick::DateTime',
+    coerce => 1,
 );
 
 has venue => (
     is => 'ro',
     isa => 'Net::Songkick::Venue',
+    coerce => 1,
 );
+
+use Data::Dumper;
 
 =head1 METHODS
 

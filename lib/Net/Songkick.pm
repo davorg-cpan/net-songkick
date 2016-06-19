@@ -51,6 +51,7 @@ use Moose;
 use LWP::UserAgent;
 use URI;
 use XML::LibXML;
+use JSON;
 
 use Net::Songkick::Event;
 use Net::Songkick::SetList;
@@ -73,6 +74,16 @@ sub _build_ua {
   return LWP::UserAgent->new;
 }
 
+has json_decoder => (
+  is => 'ro',
+  isa => 'JSON',
+  lazy_build => 1,
+);
+
+sub _build_json_decoder {
+  return JSON->new;
+}
+
 has ['api_format', 'return_format' ] => (
   is => 'ro',
   isa => 'Str',
@@ -81,7 +92,7 @@ has ['api_format', 'return_format' ] => (
 
 sub _build_api_format {
   my $format = $_[0]->return_format;
-  $format = 'xml' if $format eq 'perl';
+  $format = 'json' if $format eq 'perl';
   return $format;
 }
 
@@ -163,6 +174,8 @@ sub _request {
   if ($resp->is_success) {
     return $resp->content;
   }
+
+  die $resp->content;
 }
 
 =head2 $sk->get_events({ ... options ... });
@@ -247,15 +260,22 @@ sub get_upcoming_events {
   my $resp = $self->_request($url, \%req_args);
 
   if ($self->return_format eq 'perl') {
-    my $evnts;
+    # my $evnts;
 
-    my $xp = XML::LibXML->new->parse_string($resp);
-    foreach ($xp->findnodes('//event')) {
-      push @$evnts, Net::Songkick::Event->new_from_xml($_);
+# #     my $xp = XML::LibXML->new->parse_string($resp);
+    # foreach ($xp->findnodes('//event')) {
+      # push @$evnts, Net::Songkick::Event->new_from_xml($_);
+    # }
+    # return wantarray ? @$evnts : $evnts;
+  # } else {
+    # return $resp;
+    
+    my $data = $self->json_decoder->decode($resp);
+    my $events;
+    foreach (@{$data->{resultsPage}{results}{event}}) {
+      push @$events, Net::Songkick::Event->new($_);
     }
-    return wantarray ? @$evnts : $evnts;
-  } else {
-    return $resp;
+    return wantarray ? @$events : $events;
   }
 }
 
