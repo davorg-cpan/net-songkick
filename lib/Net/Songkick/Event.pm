@@ -28,7 +28,7 @@ has location => (
     coerce => 1,
 );
 
-has performances => (
+has performance => (
     is => 'ro',
     isa => 'ArrayRef[Net::Songkick::Performance]',
 );
@@ -45,7 +45,32 @@ has venue => (
     coerce => 1,
 );
 
-use Data::Dumper;
+around BUILDARGS => sub {
+    my $orig  = shift;
+    my $class = shift;
+
+    my %args;
+
+    if (@_ == 1) {
+        %args = %{$_[0]};
+    } else {
+        %args = @_;
+    }
+
+    if (exists $args{start} and ! $args{start}) {
+        $args{start} = DateTime->new_from_epoch(epoch => 0);
+    }
+
+    if (exists $args{performance}) {
+      foreach (@{$args{performance}}) {
+        if (ref $_ ne 'Net::Songkick::Performance') {
+          $_ = Net::Songkick::Performance->new($_);
+        }
+      }
+    }
+
+    $class->$orig(\%args);
+};
 
 =head1 METHODS
 

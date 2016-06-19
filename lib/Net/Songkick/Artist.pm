@@ -9,7 +9,12 @@ package Net::Songkick::Artist;
 use strict;
 use warnings;
 
+use Moose::Util::TypeConstraints;
 use Moose;
+
+coerce 'Net::Songkick::Artist',
+  from 'HashRef',
+  via { Net::Songkick::Artist->new($_) };
 
 has $_ => (
     is => 'ro',

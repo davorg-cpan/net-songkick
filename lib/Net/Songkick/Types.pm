@@ -12,7 +12,7 @@ Net::Songkick::Types - USeful type stuff for Net::Songkick
 package Net::Songkick::Types;
 
 use Moose::Util::TypeConstraints;
-
+use Data::Dumper;
 use DateTime::Format::Strptime;
 
 subtype 'Net::Songkick::DateTime',
@@ -21,11 +21,15 @@ subtype 'Net::Songkick::DateTime',
 coerce 'Net::Songkick::DateTime',
   from 'HashRef',
   via {
-    if ($_) {
-      DateTime::Format::Strptime->new(
-        pattern => '%Y-%m-%d %H:%M:%S%z',
-      )->parse_datetime($_);
+    my $dt = DateTime::Format::Strptime->new(
+      pattern => '%Y-%m-%dT%H:%M:%S%z',
+    )->parse_datetime($_->{datetime});
+    if (!$dt) {
+      $dt = DateTime::Format::Strptime->new(
+        pattern => '%Y-%m-%d',
+      )->parse_datetime($_->{date});
     }
+    return $dt;
   };
 
 1;

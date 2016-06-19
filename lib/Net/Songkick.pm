@@ -260,16 +260,7 @@ sub get_upcoming_events {
   my $resp = $self->_request($url, \%req_args);
 
   if ($self->return_format eq 'perl') {
-    # my $evnts;
 
-# #     my $xp = XML::LibXML->new->parse_string($resp);
-    # foreach ($xp->findnodes('//event')) {
-      # push @$evnts, Net::Songkick::Event->new_from_xml($_);
-    # }
-    # return wantarray ? @$evnts : $evnts;
-  # } else {
-    # return $resp;
-    
     my $data = $self->json_decoder->decode($resp);
     my $events;
     foreach (@{$data->{resultsPage}{results}{event}}) {

@@ -22,6 +22,6 @@ print "\n";
 
 foreach (@$evnts) {
   print $_->start->strftime('%A %d %B %Y'), "\n";
-  print ' ', $_->performances->[0]->artist->displayName;
+  print ' ', $_->performance->[0]->artist->displayName;
   print ' at ', $_->venue->displayName, "\n\n";
 }

@@ -9,8 +9,13 @@ package Net::Songkick::Performance;
 use strict;
 use warnings;
 use Moose;
+use Moose::Util::TypeConstraints;
 
 use Net::Songkick::Artist;
+
+coerce 'Net::Songkick::Performance',
+  from 'HashRef',
+  via { Net::Songkick::Performance->new($_) };
 
 has $_ => (
     is => 'ro',
@@ -20,6 +25,7 @@ has $_ => (
 has artist => (
     is => 'ro',
     isa => 'Net::Songkick::Artist',
+    coerce => 1,
 );
 
 =head1 METHODS
