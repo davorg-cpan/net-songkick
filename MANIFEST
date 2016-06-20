@@ -13,6 +13,9 @@ README
 Makefile.PL
 t/01-load.t
 t/02-basic.t
+t/03-api-urls.t
+t/04-api-params.t
+t/05-instantiation.t
 t/pod_coverage.t
 t/pod.t
 META.yml
