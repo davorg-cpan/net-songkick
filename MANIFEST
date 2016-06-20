@@ -7,6 +7,7 @@ lib/Net/Songkick/Location.pm
 lib/Net/Songkick/MetroArea.pm
 lib/Net/Songkick/Performance.pm
 lib/Net/Songkick/Venue.pm
+lib/Net/Songkick/TYpes.pm
 MANIFEST			This list of files
 README
 Makefile.PL
