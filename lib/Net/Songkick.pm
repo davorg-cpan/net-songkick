@@ -166,8 +166,6 @@ sub _request {
   $args->{apikey} = $self->api_key;
   $url->query_form($args) if $args;
 
-  print "$url\n";
-
   my $resp = $self->ua->get($url);
 
   if ($resp->is_success) {
