@@ -26,11 +26,11 @@ $feed->modified(DateTime->now);
 
 foreach (@$evnts) {
   my $entry = XML::Feed::Entry->new;
-  $entry->title($_->performances->[0]->artist->displayName);
+  $entry->title($_->performance->[0]->artist->displayName);
   $entry->link($_->uri);
   $entry->issued($_->start);
   $entry->modified($_->start);
-  my $content = $_->performances->[0]->artist->displayName . 
+  my $content = $_->performance->[0]->artist->displayName .
     ' at ' . $_->venue->displayName .
     ' on ' . $_->start->strftime('%A %d %B %Y');
   $entry->content(XML::Feed::Content->new({ body => $content }));

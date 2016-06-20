@@ -23,9 +23,9 @@ my $evnts = $sk->get_upcoming_events({
 
 foreach (@$evnts) {
   my $e = XML::Feed::Entry->new('Atom');
-  $e->title($_->performances->[0]->artist->displayName);
+  $e->title($_->performance->[0]->artist->displayName);
   $e->link($_->uri);
-  $e->content($_->performances->[0]->artist->displayName . ' at ' .
+  $e->content($_->performance->[0]->artist->displayName . ' at ' .
                   $_->venue->displayName);
   $e->issued($_->start);
   $e->modified($_->start);
