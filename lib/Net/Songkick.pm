@@ -44,7 +44,7 @@ package Net::Songkick;
 use strict;
 use warnings;
 
-our $VERSION = '1.00.00';
+our $VERSION = '1.00.01';
 
 use Moose;
 
