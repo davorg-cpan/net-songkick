@@ -50,7 +50,6 @@ use Moose;
 
 use LWP::UserAgent;
 use URI;
-use XML::LibXML;
 use JSON;
 
 use Net::Songkick::Event;

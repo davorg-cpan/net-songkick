@@ -8,7 +8,6 @@ my $build = Module::Build->new(
         perl                       => '5.6.0',
         LWP::UserAgent             => 0,
         Moose                      => 0,
-        XML::LibXML                => 0,
         URI                        => 0,
         JSON                       => 0,
         DateTime::Format::Strptime => 0,
