@@ -99,7 +99,7 @@ sub _build_return_format {
 }
 
 has ['api_url', 'events_url', 'user_events_url', 'user_gigs_url',
-     'artists_url', 'artists_mb_url', 'metro_url'] => (
+     'artists_url', 'artists_mb_url', 'venue_events_url', 'metro_url'] => (
   is => 'ro',
   isa => 'URI',
   lazy_build => 1,
@@ -129,11 +129,17 @@ sub _build_artists_mb_url {
   return URI->new(shift->api_url . '/artists/mbid:MB_ID/calendar');
 }
 
+sub _build_venue_events_url {
+  return URI->new(shift->api_url . '/venues/VENUE_ID/calendar');
+}
+
 sub _build_metro_url {
   return URI->new(shift->api_url . '/metro/METRO_ID/calendar');
 }
 
-has ['events_params', 'user_events_params', 'user_gigs_params'] => (
+has ['events_params', 'user_events_params', 'user_gigs_params',
+     'artist_events_params', 'venue_events_params',
+     'metro_events_params'] => (
   is => 'ro',
   isa => 'HashRef',
   lazy_build => 1,
@@ -158,6 +164,24 @@ sub _build_user_gigs_params {
   return { map { $_ => 1 } @params };
 }
 
+sub _build_artist_events_params {
+  my @params = qw[ min_date max_date page per_page order ];
+
+  return { map { $_ => 1} @params };
+}
+
+sub _build_venue_events_params {
+  my @params = qw[ page per_page ];
+
+  return { map { $_ => 1 } @params };
+}
+
+sub _build_metro_events_params {
+  my @params = qw[ page per_page ];
+
+  return { map { $_ => 1 } @params };
+}
+
 sub _request {
   my $self = shift;
   my ($url, $args) = @_;
@@ -172,6 +196,48 @@ sub _request {
   }
 
   die $resp->content;
+}
+
+=head2 $sk->return_perl
+
+Returns a Boolean value indicating whether or not this Net::Songkick
+object should return Perl data structures for requests.
+
+=cut
+
+sub return_perl {
+  return $_[0]->return_format eq 'perl';
+}
+
+=head2 $sk->parse_events_from_json($json_text)
+
+Takes the JSON returns by a request for a list of events, parses the JSON
+and returns a list of Net::Songkick::JSON objects.
+
+=cut
+
+sub parse_events_from_json {
+  my $self = shift;
+  my ($json) = @_;
+
+  my @events;
+  my $data = $self->json_decoder->decode($json);
+
+  # Dump the two top levels of the JSON
+  $data = $data->{resultsPage} if exists $data->{resultsPage};
+  $data = $data->{results}     if exists $data->{results};
+
+  # Ensure we have an event keys
+  die "No events found in JSON\n" unless exists $data->{event};
+
+  # Ensure we have an array of events
+  $data->{event} = [ $data->{event}] if ref $data->{event} ne 'ARRAY';
+
+  foreach (@{$data->{event}}) {
+    push @events, Net::Songkick::Event->new($_);
+  }
+
+  return @events;
 }
 
 =head2 $sk->get_events({ ... options ... });
@@ -205,17 +271,10 @@ sub get_events {
 
   my $resp = $self->_request($url, \%req_args);
 
-  if ($self->return_format eq 'perl') {
+  return $resp unless $self->return_perl;
 
-    my $data = $self->json_decoder->decode($resp);
-    my $events;
-    foreach (@{$data->{resultsPage}{results}{event}}) {
-      push @$events, Net::Songkick::Event->new($_);
-    }
-    return wantarray ? @$events : $events;
-  } else {
-    return $resp;
-  }
+  return wantarray ? $self->parse_events_from_json($resp)
+                   : [ $self->parse_events_from_json($resp) ];
 }
 
 =head2 $sk->get_upcoming_events({ ... options ... });
@@ -255,17 +314,10 @@ sub get_upcoming_events {
 
   my $resp = $self->_request($url, \%req_args);
 
-  if ($self->return_format eq 'perl') {
+  return $resp unless $self->return_perl;
 
-    my $data = $self->json_decoder->decode($resp);
-    my $events;
-    foreach (@{$data->{resultsPage}{results}{event}}) {
-      push @$events, Net::Songkick::Event->new($_);
-    }
-    return wantarray ? @$events : $events;
-  } else {
-    return $resp;
-  }
+  return wantarray ? $self->parse_events_from_json($resp)
+                   : [ $self->parse_events_from_json($resp) ];
 }
 
 =head2 $sk->get_past_events({ ... options ... });
@@ -306,16 +358,46 @@ sub get_past_events {
 
   my $resp = $self->_request($url, \%req_args);
 
-  if ($self->return_format eq 'perl') {
-    my $data = $self->json_decoder->decode($resp);
-    my $events;
-    foreach (@{$data->{resultsPage}{results}{event}}) {
-      push @$events, Net::Songkick::Event->new($_);
-    }
-    return wantarray ? @$events : $events;
+  return $resp unless $self->return_perl;
+
+  return wantarray ? $self->parse_events_from_json($resp)
+                   : [ $self->parse_events_from_json($resp) ];
+}
+
+=head2 $sk->get_venue_events({ ... options ...});
+
+=cut
+
+sub get_venue_events {
+  my $self = shift;
+
+  my ($params) = @_;
+
+  my $url;
+
+  if (exists $params->{venue_id}) {
+    $url = $self->venue_events_url . '.' . $self->api_format;
+    $url =~ s/VENUE_ID/$params->{venue_id}/;
   } else {
-    return $resp;
+    die "No venue id passed to get_venue_events\n";
   }
+
+  $url = URI->new($url);
+
+  my %req_args;
+
+  foreach (keys %$params) {
+    if ($self->venue_events_params->{$_}) {
+      $req_args{$_} = $params->{$_};
+    }
+  }
+
+  my $resp = $self->_request($url, \%req_args);
+
+  return $resp unless $self->return_perl;
+
+  return wantarray ? $self->parse_events_from_json($resp)
+                   : [ $self->parse_events_from_json($resp) ];
 }
 
 =head2 $sk->get_artist_events({ ... options ... });
@@ -328,7 +410,7 @@ sub get_artist_events {
   my ($params) = @_;
 
   my $url;
-  
+
   if (exists $params->{artist_id}) {
     $url = $self->artists_url . '.' . $self->api_format;
     $url =~ s/ARTIST_ID/$params->{artist_id}/;
@@ -340,19 +422,21 @@ sub get_artist_events {
   }
 
   $url = URI->new($url);
-  
-  my $resp = $self->_request($url);
 
-  if ($self->return_format eq 'perl') {
-    my $data = $self->json_decoder->decode($resp);
-    my $events;
-    foreach (@{$data->{resultsPage}{results}{event}}) {
-      push @$events, Net::Songkick::Event->new($_);
+  my %req_args;
+
+  foreach (keys %$params) {
+    if ($self->artist_events_params->{$_}) {
+      $req_args{$_} = $params->{$_};
     }
-    return wantarray ? @$events : $events;
-  } else {
-    return $resp;
-  }  
+  }
+
+  my $resp = $self->_request($url, \%req_args);
+
+  return $resp unless $self->return_perl;
+
+  return wantarray ? $self->parse_events_from_json($resp)
+                   : [ $self->parse_events_from_json($resp) ];
 }
 
 =head2 $sk->get_metro_events({ ... options ... });
@@ -365,7 +449,7 @@ sub get_metro_events {
   my ($params) = @_;
 
   my $url;
-  
+
   if (exists $params->{metro_id}) {
     $url = $self->metro_url . '.' . $self->api_format . '?api_key=' . $self->api_key;
     $url =~ s/METRO_ID/$params->{metro_id}/;
@@ -375,18 +459,20 @@ sub get_metro_events {
 
   $url = URI->new($url);
 
-  my $resp = $self->_request($url);
+  my %req_args;
 
-  if ($self->return_format eq 'perl') {
-    my $data = $self->json_decoder->decode($resp);
-    my $events;
-    foreach (@{$data->{resultsPage}{results}{event}}) {
-      push @$events, Net::Songkick::Event->new($_);
+  foreach (keys %$params) {
+    if ($self->metro_events_params->{$_}) {
+      $req_args{$_} = $params->{$_};
     }
-    return wantarray ? @$events : $events;
-  } else {
-    return $resp;
-  }  
+  }
+
+  my $resp = $self->_request($url, \%req_args);
+
+  return $resp unless $self->return_perl;
+
+  return wantarray ? $self->parse_events_from_json($resp)
+                   : [ $self->parse_events_from_json($resp) ];
 }
 
 =head1 AUTHOR
