@@ -15,6 +15,8 @@ my $build = Module::Build->new(
     build_recommends   => {
         Test::Pod           => 0,
         Test::Pod::Coverage => 0,
+	Test::LWP::UserAgent => 0,
+	HTTP::Request       => 0,
     },
     create_makefile_pl => 'traditional',
     script_files       => [ 'bin/gigs' ],
