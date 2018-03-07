@@ -31,7 +31,7 @@ has 'country' => (
 );
 
 no Moose;
-__PACKAGE->meta->make_immutable;
+__PACKAGE__->meta->make_immutable;
 
 =head1 AUTHOR
 

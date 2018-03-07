@@ -17,7 +17,7 @@ use DateTime::Format::Strptime;
 
 subtype 'Net::Songkick::DateTime',
   as 'DateTime';
-  
+
 coerce 'Net::Songkick::DateTime',
   from 'HashRef',
   via {
