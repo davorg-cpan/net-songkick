@@ -1,6 +1,6 @@
 =head1 NAME
 
-Net::Songkick::Types - USeful type stuff for Net::Songkick
+Net::Songkick::Types - Useful type stuff for Net::Songkick
 
 =head1 SYNOPSIS
 

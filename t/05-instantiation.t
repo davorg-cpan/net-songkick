@@ -28,19 +28,19 @@ is($metro->country->displayName, 'UK',
    'Metro area is in the correct country');
 
 my $venue = Net::Songkick::Venue->new({
-  id => 17522,
+  id => 17_522,
   displayName => 'O2 Brixton Academy',
   city => {
     uri => 'http://www.songkick.com/metro_areas/24426-uk-london',
     displayName => 'London',
     country => { displayName => 'UK' },
-    id => 24426,
+    id => 24_426,
   },
   metroArea => {
     uri => 'http://www.songkick.com/metro_areas/24426-uk-london',
     displayName => 'London',
     country => { displayName => 'UK' },
-    id => 24426,
+    id => 24_426,
   },
   uri => 'http://www.songkick.com/venues/17522-o2-academy-brixton',
   street => '211 Stockwell Road',
@@ -55,7 +55,7 @@ my $venue = Net::Songkick::Venue->new({
 
 ok($venue, 'Got a venue');
 isa_ok($venue, 'Net::Songkick::Venue');
-is($venue->id, 17522, 'Got the right venue');
+is($venue->id, 17_522, 'Got the right venue');
 is($venue->displayName, 'O2 Brixton Academy',
    'Venue has the correct name');
 isa_ok($venue->metroArea, 'Net::Songkick::MetroArea');

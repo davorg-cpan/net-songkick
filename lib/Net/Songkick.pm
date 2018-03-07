@@ -106,7 +106,7 @@ has ['api_url', 'events_url', 'user_events_url', 'user_gigs_url',
 );
 
 sub _build_api_url {
-  return URI->new('http://api.songkick.com/api/3.0'),
+  return URI->new('http://api.songkick.com/api/3.0');
 }
 
 sub _build_events_url {
@@ -147,7 +147,7 @@ has ['events_params', 'user_events_params', 'user_gigs_params',
 
 sub _build_events_params {
   my @params = qw(type artists artist_name artist_id venue_id
-		  min_date max_date location);
+                  min_date max_date location);
 
   return { map { $_ => 1 } @params };
 }
@@ -474,6 +474,9 @@ sub get_metro_events {
   return wantarray ? $self->parse_events_from_json($resp)
                    : [ $self->parse_events_from_json($resp) ];
 }
+
+no Moose;
+__PACKAGE__->meta->make_immutable;
 
 =head1 AUTHOR
 
