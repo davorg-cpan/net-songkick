@@ -20,7 +20,7 @@ use Net::Songkick::Venue;
 has $_ => (
     is => 'ro',
     isa => 'Str',
-) for qw(type status uri displayName popularity id);
+) for qw(type status uri displayName popularity id ageRestriction);
 
 has location => (
     is => 'ro',
@@ -34,6 +34,12 @@ has performance => (
 );
 
 has start => (
+    is => 'ro',
+    isa => 'Net::Songkick::DateTime',
+    coerce => 1,
+);
+
+has end => (
     is => 'ro',
     isa => 'Net::Songkick::DateTime',
     coerce => 1,
@@ -68,7 +74,7 @@ around BUILDARGS => sub {
         }
       }
     }
-
+    
     $class->$orig(\%args);
 };
 
