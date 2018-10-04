@@ -82,6 +82,10 @@ my $event = $events->[0];
 isa_ok($event->location,'Net::Songkick::Location');
 isa_ok($event->performance, ref []);
 isa_ok($event->performance->[0], 'Net::Songkick::Performance');
+isa_ok($event->performance->[0]->artist, 'Net::Songkick::Artist');
+isa_ok($event->performance->[0]->artist->identifier->[0], 'Net::Songkick::MusicBrainz');
 isa_ok($event->venue, 'Net::Songkick::Venue');
+isa_ok($event->venue->metroArea, 'Net::Songkick::MetroArea');
+
 
 done_testing;
