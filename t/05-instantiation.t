@@ -110,10 +110,10 @@ is($artist->uri,
    'http://www.songkick.com/artists/253846-radiohead?utm_source=45852&utm_medium=partner',
    'Artist has the correct URI');
 isa_ok($artist->onTourUntil, 'DateTime');
-is($artist->onTourUntil->stringify(),
-   DateTime::Format::Strptime->new(
+is( ''. $artist->onTourUntil,
+   ''. DateTime::Format::Strptime->new(
         pattern => '%Y-%m-%d',
-      )->parse_datetime('2018-04-25')->stringify(),
+      )->parse_datetime('2018-04-25'),
    'Artist is on tour');
 isa_ok($artist->identifier->[0], 'Net::Songkick::MusicBrainz');
 is($artist->identifier->[0]->mbid,
