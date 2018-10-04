@@ -147,19 +147,19 @@ has ['events_params', 'user_events_params', 'user_gigs_params',
 
 sub _build_events_params {
   my @params = qw(type artists artist_name artist_id venue_id
-                  min_date max_date location);
+                  min_date max_date location page per_page);
 
   return { map { $_ => 1 } @params };
 }
 
 sub _build_user_events_params {
-  my @params = ( keys %{shift->events_params}, 'attendance' );
+  my @params = qw[ attendance created_after page per_page order ];
 
   return { map { $_ => 1 } @params };
 }
 
 sub _build_user_gigs_params {
-  my @params = ( 'page' );
+  my @params = qw [ page per_page order];
 
   return { map { $_ => 1 } @params };
 }
@@ -171,13 +171,13 @@ sub _build_artist_events_params {
 }
 
 sub _build_venue_events_params {
-  my @params = qw[ page per_page ];
+  my @params = qw[ min_date max_date page per_page ];
 
   return { map { $_ => 1 } @params };
 }
 
 sub _build_metro_events_params {
-  my @params = qw[ page per_page ];
+  my @params = qw[ min_date max_date page per_page ];
 
   return { map { $_ => 1 } @params };
 }
@@ -243,7 +243,7 @@ sub parse_events_from_json {
 =head2 $sk->get_events({ ... options ... });
 
 Gets a list of upcoming events from Songkick. Various parameters to control
-the events returned are supported for the full list see
+the events returned are supported; for the full list see
 L<http://www.songkick.com/developer/event-search>.
 
 In addition, this method takes an extra parameter, B<format>, which control
@@ -259,6 +259,10 @@ sub get_events {
   my $self = shift;
   my ($params) = @_;
 
+  unless (exists $params->{artist_name} or exists $params->{location}) {
+    die "One of artist_name or location must be specified"
+  }
+  
   my $url = URI->new($self->events_url . '.' . $self->api_format);
 
   my %req_args;
@@ -279,9 +283,16 @@ sub get_events {
 
 =head2 $sk->get_upcoming_events({ ... options ... });
 
-Gets a list of upcoming events for a particular user from Songkick. This
-method accepts all of the same search parameters as C<get_events>. It also
-supports the optional B<format> parameter.
+Gets a list of upcoming events for a particular user from Songkick.
+
+This method has optional parameters: B<attendance> to filter results based
+upon user-flagged attendance, B<created_after> to filter out older events,
+B<page> to control which page of the data you want to return, B<per_page>
+to control the number of results to return in each page, and B<order> to
+control date ordering. 
+See L<https://www.songkick.com/developer/upcoming-events-for-user> for details.
+
+This method also supports the B<format> parameter.
 
 This method has another, mandatory, parameter called B<user>. This is the
 username of the user that you want information about.
@@ -322,10 +333,15 @@ sub get_upcoming_events {
 
 =head2 $sk->get_past_events({ ... options ... });
 
-Gets a list of upcoming events for a particular user from Songkick.
+Gets a list of previously attended events (the "gigogaphy)" for a
+particular user from Songkick.
 
-This method has an optional parameter, B<page> to control which page of
-the data you want to return. It also supports the B<format> parameter.
+This method has optional parameters: B<page> to control which page of
+the data you want to return, B<per_page> to control the number of
+results to return in each page, and B<order> to control date ordering.
+See L<https://www.songkick.com/developer/past-events-for-user> for details.
+
+This method also supports the B<format> parameter.
 
 This method has another, mandatory, parameter called B<user>. This is the
 username of the user that you want information about.
@@ -366,6 +382,18 @@ sub get_past_events {
 
 =head2 $sk->get_venue_events({ ... options ...});
 
+Gets a list of upcoming events for a venue.
+
+This method has optional parameters: B<min_date> and B<max_date to control the
+timeframe for upcoming events, >B<page> to control which page of the data you
+want to return, B<per_page> to control the number of results to return in each page.
+See L<https://www.songkick.com/developer/upcoming-events-for-venue> for details.
+
+This method also supports the B<format> parameter.
+
+This method has another, mandatory, parameter called B<venue_id>. This is the
+ID of the venue that you want information about.
+
 =cut
 
 sub get_venue_events {
@@ -402,6 +430,19 @@ sub get_venue_events {
 
 =head2 $sk->get_artist_events({ ... options ... });
 
+Gets a list of upcoming events for an artist.
+
+This method has optional parameters: B<min_date> and B<max_date to control the
+timeframe for upcoming events, >B<page> to control which page of the data you
+want to return, B<per_page> to control the number of results to return in each page.
+See L<https://www.songkick.com/developer/upcoming-events-for-artist> for details.
+
+This method also supports the B<format> parameter.
+
+This method requires another, mandatory, parameter identifying the artist.
+This can be either the B<artist_id>, containing the Songkick ID for the artist,
+or the B<mb_id> MusicBrainz ID for the artist.
+
 =cut
 
 sub get_artist_events {
@@ -418,7 +459,7 @@ sub get_artist_events {
     $url = $self->artists_mb_url . '.' . $self->api_format;
     $url =~ s/MB_ID/$params->{mb_id}/;
   } else {
-    die "No artist id or MusicBrainz id passed to get_artist_events\n";
+    die "No artist_id or mb_id passed to get_artist_events\n";
   }
 
   $url = URI->new($url);
@@ -440,6 +481,18 @@ sub get_artist_events {
 }
 
 =head2 $sk->get_metro_events({ ... options ... });
+
+Find upcoming events for a metro area. A metro area is a city or a collection of cities that Songkick uses to notify users of concerts near them.
+
+This method has optional parameters: B<min_date> and B<max_date to control the
+timeframe for upcoming events, >B<page> to control which page of the data you
+want to return, B<per_page> to control the number of results to return in each page.
+See L<https://www.songkick.com/developer/upcoming-events-for-artist> for details.
+
+This method also supports the B<format> parameter.
+
+This method has another, mandatory, parameter called B<metro_id>. This is the
+ID of the metro area to return events for.
 
 =cut
 

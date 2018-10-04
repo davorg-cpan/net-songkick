@@ -10,11 +10,10 @@ my $ns = Net::Songkick->new({ api_key => 'dummy' });
 my @param_tests = ({
   method => 'events_params',
   params => [qw[ artist_id artist_name artists location
-                 max_date min_date type venue_id ]],
+                 max_date min_date type venue_id page per_page]],
 }, {
   method => 'user_events_params',
-  params => [qw[ artist_id artist_name artists attendance
-                 location max_date min_date type venue_id ]],
+  params => [qw[ attendance created_after page per_page order ]],
 });
 
 foreach my $test (@param_tests) {
