@@ -55,6 +55,11 @@ around BUILDARGS => sub {
       }
     }
     
+    if (exists $args{onTourUntil}) {
+      $args{onTourUntil} = { date => $args{onTourUntil} };
+    }
+
+    
     $class->$orig(\%args);
 };
 

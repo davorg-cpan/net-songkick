@@ -95,5 +95,31 @@ is($identifier->mbid, 'a74b1b7f-71a5-4011-9441-d0b5e4122711',
    'Identifier has the correct mbid');
 
 
+my $artist = Net::Songkick::Artist->new({
+  id => '253846',
+  displayName => 'Radiohead',
+  uri => 'http://www.songkick.com/artists/253846-radiohead?utm_source=45852&utm_medium=partner',
+  identifier => [$identifier],
+  onTourUntil => '2018-04-25'
+});
+ok($artist, 'Got an artist');
+isa_ok($artist, 'Net::Songkick::Artist');
+is($artist->id, '253846', 'Got the right artist');
+is($artist->displayName, 'Radiohead', 'Artist has the correct name');
+is($artist->uri,
+   'http://www.songkick.com/artists/253846-radiohead?utm_source=45852&utm_medium=partner',
+   'Artist has the correct URI');
+isa_ok($artist->onTourUntil, 'DateTime');
+is($artist->onTourUntil->stringify(),
+   DateTime::Format::Strptime->new(
+        pattern => '%Y-%m-%d',
+      )->parse_datetime('2018-04-25')->stringify(),
+   'Artist is on tour');
+isa_ok($artist->identifier->[0], 'Net::Songkick::MusicBrainz');
+is($artist->identifier->[0]->mbid,
+   'a74b1b7f-71a5-4011-9441-d0b5e4122711',
+   'Artist has the correct identifier'
+);
+
 
 done_testing;
