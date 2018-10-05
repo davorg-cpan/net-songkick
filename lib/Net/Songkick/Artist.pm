@@ -12,6 +12,9 @@ use warnings;
 use Moose::Util::TypeConstraints;
 use Moose;
 
+use Net::Songkick::MusicBrainz;
+use Net::Songkick::Types;
+
 coerce 'Net::Songkick::Artist',
   from 'HashRef',
   via { Net::Songkick::Artist->new($_) };
@@ -19,7 +22,46 @@ coerce 'Net::Songkick::Artist',
 has $_ => (
     is => 'ro',
     isa => 'Str',
-) for qw[id displayName];
+) for qw[id displayName uri];
+
+has identifier => (
+    is => 'ro',
+    isa => 'ArrayRef[Net::Songkick::MusicBrainz]',
+);
+
+has onTourUntil => (
+    is => 'ro',
+    isa => 'Net::Songkick::DateTime',
+    coerce => 1,
+);
+
+around BUILDARGS => sub {
+    my $orig  = shift;
+    my $class = shift;
+
+    my %args;
+
+    if (@_ == 1) {
+        %args = %{$_[0]};
+    } else {
+        %args = @_;
+    }
+
+    if (exists $args{identifier}) {
+      foreach (@{$args{identifier}}) {
+        if (ref $_ ne 'Net::Songkick::MusicBrainz') {
+          $_ = Net::Songkick::MusicBrainz->new($_);
+        }
+      }
+    }
+    
+    if (exists $args{onTourUntil}) {
+      $args{onTourUntil} = { date => $args{onTourUntil} };
+    }
+
+    
+    $class->$orig(\%args);
+};
 
 no Moose;
 __PACKAGE__->meta->make_immutable;

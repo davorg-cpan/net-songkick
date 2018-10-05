@@ -12,6 +12,7 @@ use warnings;
 use Moose;
 use Moose::Util::TypeConstraints;
 
+use Net::Songkick::City;
 use Net::Songkick::MetroArea;
 
 coerce 'Net::Songkick::Venue',
@@ -21,7 +22,13 @@ coerce 'Net::Songkick::Venue',
 has $_ => (
     is => 'ro',
     isa => 'Str',
-) for qw[uri lat id lng displayName];
+) for qw[uri lat id lng displayName street zip phone website capacity description];
+
+has city => (
+    is => 'ro',
+    isa => 'Net::Songkick::City',
+    coerce => 1,
+);
 
 has metroArea => (
     is => 'ro',
