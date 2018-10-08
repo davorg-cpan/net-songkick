@@ -88,4 +88,105 @@ isa_ok($event->venue, 'Net::Songkick::Venue');
 isa_ok($event->venue->metroArea, 'Net::Songkick::MetroArea');
 
 
+$ua->map_response(
+  qr{/search/artists} => HTTP::Response->new(
+    200, 'OK', ['Content-Type' => 'application/json' ], '{
+      "resultsPage": {
+        "results": {
+          "artist": [
+            {
+              "id":"253846",
+              "uri":"http://www.songkick.com/artists/253846-radiohead",
+              "displayName":"Radiohead",
+              "onTourUntil":"2010-01-01",
+              "identifier": [
+                {
+                  "href": "http://api.songkick.com/api/3.0/artists/mbid:a74b1b7f-71a5-4011-9441-d0b5e4122711.json",
+                  "mbid": "a74b1b7f-71a5-4011-9441-d0b5e4122711"
+                }
+              ]
+            }
+          ]
+        },
+        "totalEntries":"1",
+        "perPage":"50",
+        "page":"1",
+        "status":"ok"
+      }
+    }',
+  ),
+);
+
+ok( my $artists = $ns->get_artists( {query => 'Radiohead'} ) );
+
+isa_ok($artists, ref []);
+is(@$artists, 1, 'Array has one element');
+isa_ok($artists->[0], 'Net::Songkick::Artist');
+
+my $artist = $artists->[0];
+
+is($artist->id, '253846', 'Artist ID found');
+is($artist->displayName, 'Radiohead', 'Artist displayName found');
+isa_ok($artist->identifier->[0], 'Net::Songkick::MusicBrainz');
+is( ''. $artist->onTourUntil,
+   ''. DateTime::Format::Strptime->new(
+        pattern => '%Y-%m-%d',
+      )->parse_datetime('2010-01-01'),
+   'Artist tour end date parsed');
+
+
+$ua->map_response(
+  qr{/artists/00000/similar_artists} => HTTP::Response->new(
+    200, 'OK', ['Content-Type' => 'application/json' ], '{
+      "resultsPage": {
+        "results": {
+          "artist": [
+            {
+              "displayName": "Gorillaz",
+              "id": 68043,
+              "identifier": [
+                {
+                  "eventsHref": "http://api.songkick.com/api/3.0/artists/mbid:e21857d5-3256-4547-afb3-4b6ded592596/calendar.json",
+                  "href": "http://api.songkick.com/api/3.0/artists/mbid:e21857d5-3256-4547-afb3-4b6ded592596.json",
+                  "mbid": "e21857d5-3256-4547-afb3-4b6ded592596"
+                }
+              ],
+              "onTourUntil": null,
+              "uri": "http://www.songkick.com/artists/68043-gorillaz?utm_source=1976&utm_medium=partner"
+            }
+          ]
+        },
+        "status": "ok",
+        "perPage": 50,
+        "page": 1,
+        "totalEntries": 136
+      }
+    }',
+  ),
+);
+
+ok( my $similar_artists = $ns->get_similar_artists( {artist_id => '00000'} ) );
+
+isa_ok($similar_artists, ref []);
+is(@$similar_artists, 1, 'Array has one element');
+isa_ok($similar_artists->[0], 'Net::Songkick::Artist');
+
+my $similar_artist = $similar_artists->[0];
+
+is($similar_artist->id, '68043', 'Similar artist ID found');
+is($similar_artist->displayName, 'Gorillaz', 'Similar artist displayName found');
+isa_ok($similar_artist->identifier->[0], 'Net::Songkick::MusicBrainz');
+is( $similar_artist->onTourUntil,
+   ''. DateTime::Format::Strptime->new(
+        pattern => '%Y-%m-%d',
+      )->parse_datetime('1970-01-01'),
+   'Similar artist tour end date parsed');
+
+
+
+
+
+
+
+
 done_testing;

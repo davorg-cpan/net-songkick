@@ -56,6 +56,9 @@ around BUILDARGS => sub {
     }
     
     if (exists $args{onTourUntil}) {
+      unless ($args{onTourUntil}) {
+        $args{onTourUntil} = DateTime->from_epoch(epoch => 0)
+      }
       $args{onTourUntil} = { date => $args{onTourUntil} };
     }
 

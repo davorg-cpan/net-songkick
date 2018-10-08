@@ -99,7 +99,9 @@ sub _build_return_format {
 }
 
 has ['api_url', 'events_url', 'user_events_url', 'user_gigs_url',
-     'artists_url', 'artists_mb_url', 'venue_events_url', 'metro_url'] => (
+     'artists_url', 'artists_mb_url', 'artist_gigs_url',
+     'artist_search_url', 'similar_artist_search_url',
+     'venue_events_url', 'metro_url'] => (
   is => 'ro',
   isa => 'URI',
   lazy_build => 1,
@@ -129,6 +131,10 @@ sub _build_artists_mb_url {
   return URI->new(shift->api_url . '/artists/mbid:MB_ID/calendar');
 }
 
+sub _build_artist_gigs_url {
+  return URI->new(shift->api_url . '/artists/ARTIST_ID/gigography');
+}
+
 sub _build_venue_events_url {
   return URI->new(shift->api_url . '/venues/VENUE_ID/calendar');
 }
@@ -137,9 +143,18 @@ sub _build_metro_url {
   return URI->new(shift->api_url . '/metro/METRO_ID/calendar');
 }
 
+sub _build_artist_search_url {
+  return URI->new(shift->api_url . '/search/artists');
+}
+
+sub _build_similar_artist_search_url {
+  return URI->new(shift->api_url . '/artists/ARTIST_ID/similar_artists');
+}
+
 has ['events_params', 'user_events_params', 'user_gigs_params',
-     'artist_events_params', 'venue_events_params',
-     'metro_events_params'] => (
+     'artist_events_params', 'artist_gigs_params',
+     'artist_search_params', 'similar_artist_search_params',
+     'venue_events_params', 'metro_events_params'] => (
   is => 'ro',
   isa => 'HashRef',
   lazy_build => 1,
@@ -170,6 +185,12 @@ sub _build_artist_events_params {
   return { map { $_ => 1} @params };
 }
 
+sub _build_artist_gigs_params {
+  my @params = qw[ min_date max_date page per_page order ];
+
+  return { map { $_ => 1} @params };
+}
+
 sub _build_venue_events_params {
   my @params = qw[ min_date max_date page per_page ];
 
@@ -180,6 +201,31 @@ sub _build_metro_events_params {
   my @params = qw[ min_date max_date page per_page ];
 
   return { map { $_ => 1 } @params };
+}
+
+sub _build_artist_search_params {
+  my @params = qw[ page per_page ];
+
+  return { map { $_ => 1 } @params };
+}
+
+sub _build_similar_artist_search_params {
+  my @params = qw[ page per_page ];
+
+  return { map { $_ => 1 } @params };
+}
+
+has responses_handled => (
+  is => 'ro',
+  isa => 'HashRef',
+  lazy_build => 1,
+);
+
+sub _build_responses_handled {
+  return {
+    event =>  'Net::Songkick::Event',
+    artist => 'Net::Songkick::Artist'
+  };
 }
 
 sub _request {
@@ -209,35 +255,36 @@ sub return_perl {
   return $_[0]->return_format eq 'perl';
 }
 
-=head2 $sk->parse_events_from_json($json_text)
+=head2 $sk->parse_results_from_json($json_text)
 
 Takes the JSON returns by a request for a list of events, parses the JSON
-and returns a list of Net::Songkick::JSON objects.
+and returns a list of Net::Songkick::... objects.
 
 =cut
 
-sub parse_events_from_json {
+sub parse_results_from_json {
   my $self = shift;
   my ($json) = @_;
 
-  my @events;
+  my @objects;
   my $data = $self->json_decoder->decode($json);
 
   # Dump the two top levels of the JSON
   $data = $data->{resultsPage} if exists $data->{resultsPage};
   $data = $data->{results}     if exists $data->{results};
 
-  # Ensure we have an event keys
-  die "No events found in JSON\n" unless exists $data->{event};
+  # Ensure we have a recognised response key
+  my $type = (keys %$data)[0];
+  die "JSON response not recognised\n" unless exists $self->responses_handled->{ $type };
 
   # Ensure we have an array of events
-  $data->{event} = [ $data->{event}] if ref $data->{event} ne 'ARRAY';
+  $data->{$type} = [ $data->{$type} ] if ref $data->{$type} ne 'ARRAY';
 
-  foreach (@{$data->{event}}) {
-    push @events, Net::Songkick::Event->new($_);
+  foreach (@{$data->{$type}}) {
+    push @objects, $self->responses_handled->{ $type }->new($_);
   }
 
-  return @events;
+  return @objects;
 }
 
 =head2 $sk->get_events({ ... options ... });
@@ -277,8 +324,8 @@ sub get_events {
 
   return $resp unless $self->return_perl;
 
-  return wantarray ? $self->parse_events_from_json($resp)
-                   : [ $self->parse_events_from_json($resp) ];
+  return wantarray ? $self->parse_results_from_json($resp)
+                   : [ $self->parse_results_from_json($resp) ];
 }
 
 =head2 $sk->get_upcoming_events({ ... options ... });
@@ -327,8 +374,8 @@ sub get_upcoming_events {
 
   return $resp unless $self->return_perl;
 
-  return wantarray ? $self->parse_events_from_json($resp)
-                   : [ $self->parse_events_from_json($resp) ];
+  return wantarray ? $self->parse_results_from_json($resp)
+                   : [ $self->parse_results_from_json($resp) ];
 }
 
 =head2 $sk->get_past_events({ ... options ... });
@@ -376,16 +423,16 @@ sub get_past_events {
 
   return $resp unless $self->return_perl;
 
-  return wantarray ? $self->parse_events_from_json($resp)
-                   : [ $self->parse_events_from_json($resp) ];
+  return wantarray ? $self->parse_results_from_json($resp)
+                   : [ $self->parse_results_from_json($resp) ];
 }
 
 =head2 $sk->get_venue_events({ ... options ...});
 
 Gets a list of upcoming events for a venue.
 
-This method has optional parameters: B<min_date> and B<max_date to control the
-timeframe for upcoming events, >B<page> to control which page of the data you
+This method has optional parameters: B<min_date> and B<max_date> to control the
+timeframe for upcoming events, B<page> to control which page of the data you
 want to return, B<per_page> to control the number of results to return in each page.
 See L<https://www.songkick.com/developer/upcoming-events-for-venue> for details.
 
@@ -424,16 +471,16 @@ sub get_venue_events {
 
   return $resp unless $self->return_perl;
 
-  return wantarray ? $self->parse_events_from_json($resp)
-                   : [ $self->parse_events_from_json($resp) ];
+  return wantarray ? $self->parse_results_from_json($resp)
+                   : [ $self->parse_results_from_json($resp) ];
 }
 
 =head2 $sk->get_artist_events({ ... options ... });
 
 Gets a list of upcoming events for an artist.
 
-This method has optional parameters: B<min_date> and B<max_date to control the
-timeframe for upcoming events, >B<page> to control which page of the data you
+This method has optional parameters: B<min_date> and B<max_date> to control the
+timeframe for upcoming events, B<page> to control which page of the data you
 want to return, B<per_page> to control the number of results to return in each page.
 See L<https://www.songkick.com/developer/upcoming-events-for-artist> for details.
 
@@ -476,8 +523,60 @@ sub get_artist_events {
 
   return $resp unless $self->return_perl;
 
-  return wantarray ? $self->parse_events_from_json($resp)
-                   : [ $self->parse_events_from_json($resp) ];
+  return wantarray ? $self->parse_results_from_json($resp)
+                   : [ $self->parse_results_from_json($resp) ];
+}
+
+=head2 $sk->get_artist_past_events({ ... options ... });
+
+Gets a list of past events for an artist..
+
+This method has optional parameters: B<min_date> and B<max_date to control the
+timeframe for upcoming events, >B<page> to control which page of the data you
+want to return, B<per_page> to control the number of results to return in each page.
+See L<https://www.songkick.com/developer/upcoming-events-for-artist> for details.
+
+This method also supports the B<format> parameter.
+
+This method requires another, mandatory, parameter identifying the artist.
+This can be either the B<artist_id>, containing the Songkick ID for the artist,
+or the B<mb_id> MusicBrainz ID for the artist.
+
+=cut
+
+sub get_artist_past_events {
+  my $self = shift;
+
+  my ($params) = @_;
+
+  my $url;
+
+  if (exists $params->{artist_id}) {
+    $url = $self->artists_url . '.' . $self->api_format;
+    $url =~ s/ARTIST_ID/$params->{artist_id}/;
+  } elsif (exists $params->{mb_id}) {
+    $url = $self->artists_mb_url . '.' . $self->api_format;
+    $url =~ s/MB_ID/$params->{mb_id}/;
+  } else {
+    die "No artist_id or mb_id passed to get_artist_events\n";
+  }
+
+  $url = URI->new($url);
+
+  my %req_args;
+
+  foreach (keys %$params) {
+    if ($self->artist_gigs_params->{$_}) {
+      $req_args{$_} = $params->{$_};
+    }
+  }
+
+  my $resp = $self->_request($url, \%req_args);
+
+  return $resp unless $self->return_perl;
+
+  return wantarray ? $self->parse_results_from_json($resp)
+                   : [ $self->parse_results_from_json($resp) ];
 }
 
 =head2 $sk->get_metro_events({ ... options ... });
@@ -524,8 +623,107 @@ sub get_metro_events {
 
   return $resp unless $self->return_perl;
 
-  return wantarray ? $self->parse_events_from_json($resp)
-                   : [ $self->parse_events_from_json($resp) ];
+  return wantarray ? $self->parse_results_from_json($resp)
+                   : [ $self->parse_results_from_json($resp) ];
+}
+
+=head2 $sk->get_artists({ ... options ... });
+
+Search for artists by name using full text search. Sorted by relevancy.
+
+This method has optional parameters: B<page> to control which page of the data you
+want to return, B<per_page> to control the number of results to return in each page.
+See L<https://www.songkick.com/developer/artist-search> for details.
+
+This method also supports the B<format> parameter.
+
+This method has another, mandatory, parameter called B<metro_id>. This is the
+ID of the metro area to return events for.
+
+=cut
+
+sub get_artists {
+  my $self = shift;
+
+  my ($params) = @_;
+
+  my $url;
+
+  my $query;
+  if (exists $params->{query}) {
+    $query = delete $params->{query};
+  } else {
+    die "name of the artist not passed in <query> parameter to get_artists\n";
+  }
+  
+  $url = $self->artist_search_url . '.' . $self->api_format . '?api_key='
+    . $self->api_key .'&query=' . $query;
+  $url = URI->new($url);
+
+  my %req_args;
+
+  foreach (keys %$params) {
+    if ($self->artist_search_params->{$_}) {
+      $req_args{$_} = $params->{$_};
+    }
+  }
+
+  my $resp = $self->_request($url, \%req_args);
+
+  return $resp unless $self->return_perl;
+
+  return wantarray ? $self->parse_results_from_json($resp)
+                   : [ $self->parse_results_from_json($resp) ];
+}
+
+=head2 $sk->get_similar_artists({ ... options ... });
+
+A list of artists similar to a given artist, based on tracking and attendance data.
+
+This method has optional parameters: B<page> to control which page of the data you
+want to return, B<per_page> to control the number of results to return in each page.
+See L<https://www.songkick.com/developer/similar-artists> for details.
+
+This method also supports the B<format> parameter.
+
+This method has another, mandatory, parameter called B<artist_id>. This is the
+ID of the artist to return similar artists for.
+
+=cut
+
+sub get_similar_artists {
+  my $self = shift;
+
+  my ($params) = @_;
+
+  my $url;
+
+  my $artist_id;
+  if (exists $params->{artist_id}) {
+    $artist_id = delete $params->{artist_id};
+  } else {
+    die "ID of the artist not passed in <artist_id> parameter to get_similar_artists\n";
+  }
+  
+  $url = $self->similar_artist_search_url . '.' . $self->api_format . '?api_key='
+    . $self->api_key;
+  $url =~ s/ARTIST_ID/$artist_id/;
+  $url = URI->new($url);
+
+  my %req_args;
+
+  foreach (keys %$params) {
+    if ($self->similar_artist_search_params->{$_}) {
+      $req_args{$_} = $params->{$_};
+    }
+  }
+
+  my $resp = $self->_request($url, \%req_args);
+
+  return $resp unless $self->return_perl;
+
+  return wantarray ? $self->parse_results_from_json($resp)
+                   : [ $self->parse_results_from_json($resp) ];  
 }
 
 no Moose;
