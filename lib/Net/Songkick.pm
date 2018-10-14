@@ -101,7 +101,8 @@ sub _build_return_format {
 has ['api_url', 'events_url', 'user_events_url', 'user_gigs_url',
      'artists_url', 'artists_mb_url', 'artist_gigs_url',
      'artist_search_url', 'similar_artist_search_url',
-     'venue_events_url', 'metro_url'] => (
+     'venue_events_url', 'metro_url', 'event_details_url',
+     'venue_details_url', 'venues_url', 'locations_url'] => (
   is => 'ro',
   isa => 'URI',
   lazy_build => 1,
@@ -151,10 +152,27 @@ sub _build_similar_artist_search_url {
   return URI->new(shift->api_url . '/artists/ARTIST_ID/similar_artists');
 }
 
+sub _build_event_details_url {
+  return URI->new(shift->api_url . '/events/EVENT_ID');
+}
+
+sub _build_venue_details_url {
+  return URI->new(shift->api_url . '/venues/VENUE_ID');
+}
+
+sub _build_venues_url {
+  return URI->new(shift->api_url . '/venues');
+}
+
+sub _build_locations_url {
+  return URI->new(shift->api_url . '/locations');
+}
+
 has ['events_params', 'user_events_params', 'user_gigs_params',
      'artist_events_params', 'artist_gigs_params',
      'artist_search_params', 'similar_artist_search_params',
-     'venue_events_params', 'metro_events_params'] => (
+     'venue_events_params', 'metro_events_params',
+     'venues_params', 'locations_params'] => (
   is => 'ro',
   isa => 'HashRef',
   lazy_build => 1,
@@ -215,6 +233,18 @@ sub _build_similar_artist_search_params {
   return { map { $_ => 1 } @params };
 }
 
+sub _build_venues_params {
+  my @params = qw[ page per_page ];
+
+  return { map { $_ => 1 } @params };
+}
+
+sub _build_locations_params {
+  my @params = qw[ page per_page query location ];
+
+  return { map { $_ => 1 } @params };
+}
+
 has responses_handled => (
   is => 'ro',
   isa => 'HashRef',
@@ -223,8 +253,9 @@ has responses_handled => (
 
 sub _build_responses_handled {
   return {
+    artist => 'Net::Songkick::Artist',
     event =>  'Net::Songkick::Event',
-    artist => 'Net::Songkick::Artist'
+    venue =>  'Net::Songkick::Venue',
   };
 }
 
@@ -724,6 +755,177 @@ sub get_similar_artists {
 
   return wantarray ? $self->parse_results_from_json($resp)
                    : [ $self->parse_results_from_json($resp) ];  
+}
+
+=head2 $sk->get_event({ ... options ... });
+
+Gets detailed event information, including full venue information,
+for the specified event.
+
+This method has a single, mandatory, parameter called B<event_id>.
+This is the ID of the event to return information about. This method
+has no optional parameters.
+
+This method also supports the B<format> parameter.
+
+=cut
+
+sub get_event_details {
+  my $self = shift;
+
+  my ($params) = @_;
+
+  my $event_id;
+  if (exists $params->{event_id}) {
+    $event_id = delete $params->{event_id};
+  } else {
+    die "event_id not passed to get_event\n";
+  }
+
+  my $url = $self->event_details_url . '.' . $self->api_format;
+  $url =~ s/EVENT_ID/$event_id/;
+  $url = URI->new($url);
+
+  my %req_args;
+
+  my $resp = $self->_request($url, \%req_args);
+
+  return $resp unless $self->return_perl;
+
+  return wantarray ? $self->parse_results_from_json($resp)
+                   : [ $self->parse_results_from_json($resp) ];
+}
+
+=head2 $sk->get_venue({ ... options ... });
+
+Gets detailed venue information, venue information, complete address,
+phone number, description, and more. See
+L<https://www.songkick.com/developer/venue-details> for details.
+
+This method has a single, mandatory, parameter called B<venue_id>.
+This is the ID of the venue to return information about. This method
+has no optional parameters.
+
+This method also supports the B<format> parameter.
+
+=cut
+
+sub get_venue {
+  my $self = shift;
+
+  my ($params) = @_;
+
+  my $venue_id;
+  if (exists $params->{venue_id}) {
+    $venue_id = delete $params->{venue_id};
+  } else {
+    die "venue_id not passed to get_venue\n";
+  }
+
+  my $url = $self->venue_details_url . '.' . $self->api_format;
+  $url =~ s/VENUE_ID/$venue_id/;
+  $url = URI->new($url);
+
+  my %req_args;
+
+  my $resp = $self->_request($url, \%req_args);
+
+  return $resp unless $self->return_perl;
+
+  return wantarray ? $self->parse_results_from_json($resp)
+                   : [ $self->parse_results_from_json($resp) ];
+}
+
+=head2 $sk->get_venues({ ... options ... });
+
+Gets listings of venues on Songkick using full text search, including
+past names and aliases. Sorted by relevancy.See
+L<https://www.songkick.com/developer/venue-search> for details.
+
+This method has optional parameters: B<page> to control which page of the data you
+want to return, B<per_page> to control the number of results to return in each page.
+
+This method also supports the B<format> parameter.
+
+This method has another, mandatory, parameter called B<query>. This is the
+name of the venue you are searching for.
+
+=cut
+
+sub get_venues {
+  my $self = shift;
+
+  my ($params) = @_;
+
+  my $query;
+  if (exists $params->{query}) {
+    $query = delete $params->{query};
+  } else {
+    die "query not passed to get_venues\n";
+  }
+
+  my $url = $self->venues_url . '.' . $self->api_format;
+  $url = URI->new($url);
+
+  my %req_args;
+
+  foreach (keys %$params) {
+    if ($self->venues_params->{$_}) {
+      $req_args{$_} = $params->{$_};
+    }
+  }
+
+  my $resp = $self->_request($url, \%req_args);
+
+  return $resp unless $self->return_perl;
+
+  return wantarray ? $self->parse_results_from_json($resp)
+                   : [ $self->parse_results_from_json($resp) ];
+}
+
+=head2 $sk->get_locations({ ... options ... });
+
+Gets listings locations: a city and its metro area. A metro area is a city or a
+collection of cities that Songkick uses to notify users of concerts near them. See
+L<https://www.songkick.com/developer/location-search> for details.
+
+This method has optional parameters: B<page> to control which page of the data you
+want to return, B<per_page> to control the number of results to return in each page.
+
+This method also supports the B<format> parameter.
+
+This method requires another, mandatory, parameter identifying the artist.
+This can be either the B<query>, containing the name of the location you are searching
+for, or the B<location>, which dictates how the content returned should be localised.
+
+=cut
+
+sub get_locations {
+  my $self = shift;
+
+  my ($params) = @_;
+
+  unless(exists $params->{query} || exists $params->{location}) {
+    die "No query or location passed to get_locations\n";
+  }
+  
+  my $url = $self->locations_url . '.' . $self->api_format;
+  $url = URI->new($url);
+
+  my %req_args;
+
+  foreach (keys %$params) {
+    if ($self->locations_params->{$_}) {
+      $req_args{$_} = $params->{$_};
+    }
+  }
+
+  my $resp = $self->_request($url, \%req_args);
+
+  return $resp unless $self->return_perl;
+
+  return wantarray ? $self->parse_results_from_json($resp)
+                   : [ $self->parse_results_from_json($resp) ];
 }
 
 no Moose;
