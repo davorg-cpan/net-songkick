@@ -71,7 +71,7 @@ my $ns = Net::Songkick->new({
     ua      => $ua,
 });
 
-ok( my $events = $ns->get_events( {location => 'London'} ) );
+ok( my $events = $ns->get_events( {location => 'San Francisco'} ) );
 
 isa_ok($events, ref []);
 is(@$events, 1, 'Array has one element');
@@ -80,6 +80,7 @@ isa_ok($events->[0], 'Net::Songkick::Event');
 my $event = $events->[0];
 
 isa_ok($event->location,'Net::Songkick::Location');
+is($event->location->city, 'San Francisco, CA, US', 'Event will take place in "San Francisco, CA, US"');
 isa_ok($event->performance, ref []);
 isa_ok($event->performance->[0], 'Net::Songkick::Performance');
 isa_ok($event->performance->[0]->artist, 'Net::Songkick::Artist');
@@ -382,7 +383,7 @@ isa_ok($venues, ref []);
 is(@$venues, 1, 'Array has one element');
 isa_ok($venues->[0], 'Net::Songkick::Venue');
 
-my $venuesdet = $venue->[0];
+my $venuesdet = $venues->[0];
 
 is($venuesdet->id, '17522', 'Correct Brixton Academy venue ID');
 is($venuesdet->displayName, 'O2 Academy Brixton', 'Venue is O2 Academy Brixton');
@@ -444,12 +445,24 @@ $ua->map_response(
   ),
 );
 
+ok( my $locations = $ns->get_locations( {query => 'London'} ) );
 
-#TODO
-#https://api.songkick.com/api/3.0/search/locations.json?query=London&apikey={your_api_key}
-#https://api.songkick.com/api/3.0/search/locations.xml?query=London&apikey={your_api_key}
+isa_ok($locations, ref []);
+is(@$locations, 2, 'Array has two elements');
+isa_ok($locations->[0], 'Net::Songkick::Location');
+isa_ok($locations->[1], 'Net::Songkick::Location');
 
+my $londonuk = $locations->[0];
+my $londonus = $locations->[1];
 
+is($londonuk->city->displayName, 'London', 'Location result 1 is for London');
+is($londonus->city->displayName, 'London', 'Location result 2 is for a different London');
+is($londonuk->city->country->displayName, 'UK', 'There is a London in the UK');
+is($londonuk->metroArea->id, '24426', 'London in the UK has its own Metro Area with ID = 24426');
+is($londonus->city->country->displayName, 'US', 'There is a London in the US');
+is($londonus->metroArea->id, '24580', 'London in the US is in the Metro Area with ID = 24580');
+is($londonus->metroArea->displayName, 'Lexington', 'The Lexington Metro Area has ID = 24580 ');
+is($londonus->city->state->displayName, 'KY', 'The London in the US is in Kentucky');
 
 
 done_testing;

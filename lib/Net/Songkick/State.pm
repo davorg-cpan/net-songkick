@@ -1,38 +1,24 @@
 =head1 NAME
 
-Net::Songkick::Location - Models a location in the Songkick API
+Net::Songkick::State - Models a state in the Songkick API
 
 =cut
 
-package Net::Songkick::Location;
+package Net::Songkick::State;
 
 use strict;
 use warnings;
 
 use Moose;
 use Moose::Util::TypeConstraints;
-use Net::Songkick::City;
-use Net::Songkick::MetroArea;
 
-coerce 'Net::Songkick::Location',
+coerce 'Net::Songkick::State',
   from 'HashRef',
-  via { Net::Songkick::Location->new($_) };
+  via { Net::Songkick::State->new($_) };
 
-has $_ => (
+has displayName => (
     is => 'ro',
     isa => 'Str',
-) for qw[lng lat];
-
-has city => (
-    is => 'ro',
-    isa => 'Str|Net::Songkick::City',
-    coerce => 1
-);
-
-has metroArea => (
-    is => 'ro',
-    isa => 'Net::Songkick::MetroArea',
-    coerce => 1
 );
 
 no Moose;

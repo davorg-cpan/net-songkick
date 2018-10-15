@@ -253,9 +253,10 @@ has responses_handled => (
 
 sub _build_responses_handled {
   return {
-    artist => 'Net::Songkick::Artist',
-    event =>  'Net::Songkick::Event',
-    venue =>  'Net::Songkick::Venue',
+    artist  =>  'Net::Songkick::Artist',
+    event   =>  'Net::Songkick::Event',
+    location => 'Net::Songkick::Location',
+    venue   =>  'Net::Songkick::Venue',
   };
 }
 

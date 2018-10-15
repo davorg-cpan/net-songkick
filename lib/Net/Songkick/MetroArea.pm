@@ -13,6 +13,7 @@ use Moose;
 use Moose::Util::TypeConstraints;
 
 use Net::Songkick::Country;
+use Net::Songkick::State;
 
 coerce 'Net::Songkick::MetroArea',
   from 'HashRef',
@@ -27,6 +28,12 @@ has $_ => (
 has 'country' => (
     is => 'ro',
     isa => 'Net::Songkick::Country',
+    coerce => 1,
+);
+
+has state => (
+    is => 'ro',
+    isa => 'Net::Songkick::State',
     coerce => 1,
 );
 
