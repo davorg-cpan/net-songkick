@@ -13,8 +13,11 @@ http://api.songkick.com/api/3.0/search/venues.json?query={search_query}&apikey={
 TODO http://api.songkick.com/api/3.0/users/{username}/calendar.json?reason=tracked_artist&apikey={your_api_key}
 http://api.songkick.com/api/3.0/users/{username}/events.json?reason=tracked_artist&apikey={your_api_key}
 http://api.songkick.com/api/3.0/users/{username}/gigography.json?apikey={your_api_key}
-TODO https://api.songkick.com/api/3.0/users/{username}/artists/tracked.json?apikey={your_api_key}
-TODO https://api.songkick.com/api/3.0/users/{username}/artists/muted.json?apikey={your_api_key}
-TODO https://api.songkick.com/api/3.0/users/{username}/metro_areas/tracked.json?apikey={your_api_key}
+https://api.songkick.com/api/3.0/users/{username}/artists/tracked.json?apikey={your_api_key}
+https://api.songkick.com/api/3.0/users/{username}/artists/muted.json?apikey={your_api_key}
+https://api.songkick.com/api/3.0/users/{username}/metro_areas/tracked.json?apikey={your_api_key}
+https://api.songkick.com/api/3.0/users/{username}/trackings/artist:{artist_id}.json?apikey={your_api_key}
+https://api.songkick.com/api/3.0/users/{username}/trackings/event:{event_id}.json?apikey={your_api_key}
+https://api.songkick.com/api/3.0/users/{username}/trackings/metro_area:{metro_area_id}.json?apikey={your_api_key}
 http://api.songkick.com/api/3.0/venues/{venue_id}/calendar.json?apikey={your_api_key}
 http://api.songkick.com/api/3.0/venues/{venue_id}.json?apikey={your_api_key}

@@ -5,6 +5,7 @@ use Test::LWP::UserAgent;
 use HTTP::Response;
 
 use Net::Songkick;
+use Data::Dumper qw(Dumper);
 
 my $ua = Test::LWP::UserAgent->new;
 
@@ -445,7 +446,7 @@ $ua->map_response(
   ),
 );
 
-ok( my $locations = $ns->get_locations( {query => 'London'} ) );
+ok( my $locations = $ns->get_locations( {query => 'London'} ) ); 
 
 isa_ok($locations, ref []);
 is(@$locations, 2, 'Array has two elements');
@@ -463,6 +464,361 @@ is($londonus->city->country->displayName, 'US', 'There is a London in the US');
 is($londonus->metroArea->id, '24580', 'London in the US is in the Metro Area with ID = 24580');
 is($londonus->metroArea->displayName, 'Lexington', 'The Lexington Metro Area has ID = 24580 ');
 is($londonus->city->state->displayName, 'KY', 'The London in the US is in Kentucky');
+
+$ua->map_response(
+  qr{/users/bob/calendar} => HTTP::Response->new(
+    200, 'OK', ['Content-Type' => 'application/json' ], '{
+      "resultsPage": {
+        "results": {
+          "calendarEntry": [
+            {
+              "reason": {
+                "trackedArtist": [{
+                  "uri":"http://www.songkick.com/artists/29835-wild-flag?utm_source=PARTNER_ID&utm_medium=partner",
+                  "displayName":"Wild Flag",
+                  "id":29835,
+                  "identifier":[ { "mbid": "a74b1b7f-71a5-4011-9441-d0b5e4122711", "href": "http://blah.com"}]
+                }],
+                "attendance": "i_might_go|im_going"
+              },
+              "event": {
+                "id":11129128,
+                "type":"Concert",
+                "uri":"http://www.songkick.com/concerts/11129128-wild-flag-at-fillmore?utm_source=PARTNER_ID&utm_medium=partner",
+                "displayName":"Wild Flag at The Fillmore (April 18, 2012)",
+                "start": {
+                  "time":"20:00:00",
+                  "date":"2012-04-18",
+                  "datetime":"2012-04-18T20:00:00-0800"
+                },
+              "performance": [{
+                "artist":{
+                  "uri":"http://www.songkick.com/artists/29835-wild-flag?utm_source=PARTNER_ID&utm_medium=partner",
+                  "displayName":"Wild Flag",
+                  "id":29835,
+                  "identifier":[ { "mbid": "a74b1b7f-71a5-4011-9441-d0b5e4122711", "href": "http://blah.com"}]
+                },
+                "id":21579303,
+                "displayName":"Wild Flag",
+                "billingIndex":1,
+                "billing":"headline"
+              }],
+              "location": {
+                "city":"San Francisco, CA, US",
+                "lng":-122.4332937,
+                "lat":37.7842398
+              },
+              "venue": {
+                "id":6239,
+                "displayName":"The Fillmore",
+                "uri":"http://www.songkick.com/venues/6239-fillmore?utm_source=PARTNER_ID&utm_medium=partner",
+                "lng":-122.4332937,
+                "lat":37.7842398,
+                "metroArea": {
+                  "uri":"http://www.songkick.com/metro_areas/26330-us-sf-bay-area?utm_source=PARTNER_ID&utm_medium=partner",
+                  "displayName":"SF Bay Area",
+                  "country": { "displayName":"US" },
+                  "id":26330,
+                  "state": { "displayName":"CA" }
+                }
+              },
+              "status":"ok",
+              "popularity":0.012763
+              }
+            }
+          ]
+        }
+      }
+    }',
+  ),
+);
+
+# TODO: Fix Event parsing when received as part of Calendar entry
+ok( my $calendar = $ns->get_upcoming_calendar( { user => 'bob', reason => 'attendance'} ) );
+#
+#isa_ok($locations, ref []);
+#is(@$locations, 1, 'calendarEntry array has one element');
+#isa_ok($locations->[0], 'Net::Songkick::CalendarEntry');
+#
+#my $centry = $locations->[0];
+#
+#isa_ok($centry->reason, 'Net::Songkick::Reason');
+#is($centry->reason->attendance, 'i_might_go|im_going', 'Calendar entry has expected attendance attribute');
+#isa_ok($centry->reason->trackedArtist->[0], 'Net::Songkick::Artist');
+#isa_ok($centry->event, 'Net::Songkick::Event');
+
+$ua->map_response(
+  qr{/users/bob/metro_areas/tracked} => HTTP::Response->new(
+    200, 'OK', ['Content-Type' => 'application/json' ], '{
+      "resultsPage": {
+        "results": {
+          "metroArea": [
+            {
+              "uri":"http://www.songkick.com/metro_areas/26330-us-sf-bay-area?utm_source=PARTNER_ID&utm_medium=partner",
+              "displayName":"SF Bay Area",
+              "country": { "displayName":"US" },
+              "id":26330,
+              "state": { "displayName":"CA" }
+            },
+            {
+              "uri":"http://www.songkick.com/metro_areas/24426-uk-london?utm_source=PARTNER_ID&utm_medium=partner",
+              "displayName":"London",
+              "country": { "displayName":"UK" },
+              "id":24426
+            },
+            {
+              "id":24580,
+              "uri":"http://www.songkick.com/metro_areas/24580",
+              "displayName":"Lexington",
+              "country": { "displayName":"US" },
+              "lng":-84.4947,
+              "lat":38.0297,
+              "state": { "displayName":"KY" }              
+            }
+          ]
+        }
+      },
+      "status": "ok",
+      "page": 1,
+      "totalEntries": 3,
+      "perPage": 50
+    }',
+  ),
+);
+
+ok( my $tracked_metro = $ns->get_tracked( { user => 'bob', tracked => 'metro_areas'} ) );
+
+isa_ok($tracked_metro, ref []);
+is(@$tracked_metro, 3, 'Tracked MetroArea array has 3 elements');
+isa_ok($tracked_metro->[0], 'Net::Songkick::MetroArea');
+isa_ok($tracked_metro->[1], 'Net::Songkick::MetroArea');
+isa_ok($tracked_metro->[2], 'Net::Songkick::MetroArea');
+
+$ua->map_response(
+  qr{/users/bob/artists/tracked} => HTTP::Response->new(
+    200, 'OK', ['Content-Type' => 'application/json' ], '{
+      "resultsPage": {
+        "results": {
+          "artist": [
+            {
+              "uri":"http://www.songkick.com/artists/29835-wild-flag?utm_source=PARTNER_ID&utm_medium=partner",
+              "displayName":"Wild Flag",
+              "id":29835,
+              "identifier":[ { "mbid": "a74b1b7f-71a5-4011-9441-d0b5e4122711", "href": "http://blah.com"}]
+            },
+            {
+              "id":"253846",
+              "uri":"http://www.songkick.com/artists/253846-radiohead",
+              "displayName":"Radiohead",
+              "onTourUntil":"2010-01-01",
+              "identifier": [
+                {
+                  "href": "http://api.songkick.com/api/3.0/artists/mbid:a74b1b7f-71a5-4011-9441-d0b5e4122711.json",
+                  "mbid": "a74b1b7f-71a5-4011-9441-d0b5e4122711"
+                }
+              ]
+            }          ]
+        }
+      },
+      "status": "ok",
+      "page": 1,
+      "totalEntries": 2,
+      "perPage": 50
+    }',
+  ),
+);
+
+ok( my $tracked_artists = $ns->get_tracked( { user => 'bob', tracked => 'artists'} ) );
+
+isa_ok($tracked_artists, ref []);
+is(@$tracked_artists, 2, 'Tracked Artist array has 2 elements');
+isa_ok($tracked_artists->[0], 'Net::Songkick::Artist');
+isa_ok($tracked_artists->[1], 'Net::Songkick::Artist');
+
+
+$ua->map_response(
+  qr{/users/bob/artists/muted} => HTTP::Response->new(
+    200, 'OK', ['Content-Type' => 'application/json' ], '{
+      "resultsPage": {
+        "results": {
+          "artist": [
+            {
+              "displayName": "Gorillaz",
+              "id": 68043,
+              "identifier": [
+                {
+                  "eventsHref": "http://api.songkick.com/api/3.0/artists/mbid:e21857d5-3256-4547-afb3-4b6ded592596/calendar.json",
+                  "href": "http://api.songkick.com/api/3.0/artists/mbid:e21857d5-3256-4547-afb3-4b6ded592596.json",
+                  "mbid": "e21857d5-3256-4547-afb3-4b6ded592596"
+                }
+              ],
+              "onTourUntil": null,
+              "uri": "http://www.songkick.com/artists/68043-gorillaz?utm_source=1976&utm_medium=partner"
+            }
+          ]
+        }
+      },
+      "status": "ok",
+      "page": 1,
+      "totalEntries": 1,
+      "perPage": 50
+    }',
+  ),
+);
+
+ok( my $muted_artists = $ns->get_muted( { user => 'bob', thing => 'artists'} ) );
+
+isa_ok($muted_artists, ref []);
+is(@$muted_artists, 1, 'Muted Artist array has 1 element');
+isa_ok($muted_artists->[0], 'Net::Songkick::Artist');
+
+
+$ua->map_response(
+  qr{/users/bob/trackings/artist:29835} => HTTP::Response->new(
+    200, 'OK', ['Content-Type' => 'application/json' ], '{
+      "resultsPage": {
+        "results": {
+          "artist": [
+            {
+              "uri":"http://www.songkick.com/artists/29835-wild-flag?utm_source=PARTNER_ID&utm_medium=partner",
+              "displayName":"Wild Flag",
+              "id":29835,
+              "identifier":[ { "mbid": "a74b1b7f-71a5-4011-9441-d0b5e4122711", "href": "http://blah.com"}]
+            }
+          ]
+        }
+      },
+      "status": "ok",
+      "page": 1,
+      "totalEntries": 1,
+      "perPage": 50
+    }',
+  ),
+);
+
+$ua->map_response(
+  qr{/users/bob/trackings/artist:00000} =>
+    HTTP::Response->new(404, 'NOT FOUND'),
+);
+
+ok( my $tracked_artist_true = $ns->get_tracking( { user => 'bob', artist_id => '29835'} ) );
+isa_ok($tracked_artist_true, ref []);
+is(@$tracked_artist_true, 1, 'Tracked Artist array has one element');
+isa_ok($tracked_artist_true->[0], 'Net::Songkick::Artist');
+
+ok( !defined (my $tracked_artist_false = $ns->get_tracking( { user => 'bob', artist_id => '00000'} ) ) );
+
+$ua->map_response(
+  qr{/users/bob/trackings/event:11129128} => HTTP::Response->new(
+    200, 'OK', ['Content-Type' => 'application/json' ], '{
+      "resultsPage": {
+        "results": {
+          "event": [
+            {
+              "id":11129128,
+              "type":"Concert",
+              "uri":"http://www.songkick.com/concerts/11129128-wild-flag-at-fillmore?utm_source=PARTNER_ID&utm_medium=partner",
+              "displayName":"Wild Flag at The Fillmore (April 18, 2012)",
+              "start": {
+                "time":"20:00:00",
+                "date":"2012-04-18",
+                "datetime":"2012-04-18T20:00:00-0800"
+              },
+              "performance": [{
+                "artist":{
+                  "uri":"http://www.songkick.com/artists/29835-wild-flag?utm_source=PARTNER_ID&utm_medium=partner",
+                  "displayName":"Wild Flag",
+                  "id":29835,
+                  "identifier":[ { "mbid": "a74b1b7f-71a5-4011-9441-d0b5e4122711", "href": "http://blah.com"}]
+                },
+                "id":21579303,
+                "displayName":"Wild Flag",
+                "billingIndex":1,
+                "billing":"headline"
+              }],
+              "location": {
+                "city":"San Francisco, CA, US",
+                "lng":-122.4332937,
+                "lat":37.7842398
+              },
+              "venue": {
+                "id":6239,
+                "displayName":"The Fillmore",
+                "uri":"http://www.songkick.com/venues/6239-fillmore?utm_source=PARTNER_ID&utm_medium=partner",
+                "lng":-122.4332937,
+                "lat":37.7842398,
+                "metroArea": {
+                  "uri":"http://www.songkick.com/metro_areas/26330-us-sf-bay-area?utm_source=PARTNER_ID&utm_medium=partner",
+                  "displayName":"SF Bay Area",
+                  "country": { "displayName":"US" },
+                  "id":26330,
+                  "state": { "displayName":"CA" }
+                }
+              },
+              "status":"ok",
+              "popularity":0.012763
+            }
+          ]
+        }
+      },
+      "status": "ok",
+      "page": 1,
+      "totalEntries": 1,
+      "perPage": 50
+    }',
+  ),
+);
+
+$ua->map_response(
+  qr{/users/bob/trackings/event:00000000} =>
+    HTTP::Response->new(404, 'NOT FOUND'),
+);
+
+ok( my $tracked_event_true = $ns->get_tracking( { user => 'bob', event_id => '11129128'} ) );
+isa_ok($tracked_event_true, ref []);
+is(@$tracked_event_true, 1, 'Tracked Event array has one element');
+isa_ok($tracked_event_true->[0], 'Net::Songkick::Event');
+
+ok( !defined (my $tracked_event_false = $ns->get_tracking( { user => 'bob', event_id => '00000000'} ) ) );
+
+$ua->map_response(
+  qr{/users/bob/trackings/metro_area:24426} => HTTP::Response->new(
+    200, 'OK', ['Content-Type' => 'application/json' ], '{
+      "resultsPage": {
+        "results": {
+          "metroArea": [
+            {
+              "id":24426,
+              "uri":"http://www.songkick.com/metro_areas/24426-uk-london",
+              "displayName":"London",
+              "country":{"displayName":"UK"},
+              "lng":-0.128,
+              "lat":51.5078
+            }
+          ]
+        }
+      },
+      "status": "ok",
+      "page": 1,
+      "totalEntries": 1,
+      "perPage": 50
+    }',
+  ),
+);
+
+$ua->map_response(
+  qr{/users/bob/trackings/metro_area:00000} =>
+    HTTP::Response->new(404, 'NOT FOUND'),
+);
+
+
+ok( my $tracked_metro_true = $ns->get_tracking( { user => 'bob', metro_area_id => '24426'} ) );
+isa_ok($tracked_metro_true, ref []);
+is(@$tracked_metro_true, 1, 'Tracked MetroArea array has one element');
+isa_ok($tracked_metro_true->[0], 'Net::Songkick::MetroArea');
+
+ok( !defined (my $tracked_metro_false = $ns->get_tracking( { user => 'bob', metro_area_id => '00000'} ) ) );
+
 
 
 done_testing;

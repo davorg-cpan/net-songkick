@@ -52,6 +52,7 @@ use LWP::UserAgent;
 use URI;
 use JSON;
 
+use Net::Songkick::Calendar;
 use Net::Songkick::Event;
 
 has api_key => (
@@ -98,7 +99,9 @@ sub _build_return_format {
   return 'perl';
 }
 
-has ['api_url', 'events_url', 'user_events_url', 'user_gigs_url',
+has ['api_url', 'events_url', 'user_events_url', 'user_calendar_url',
+     'user_gigs_url', 'user_tracked_url', 'user_muted_url',
+     'user_trackings_url',
      'artists_url', 'artists_mb_url', 'artist_gigs_url',
      'artist_search_url', 'similar_artist_search_url',
      'venue_events_url', 'metro_url', 'event_details_url',
@@ -120,8 +123,24 @@ sub _build_user_events_url {
   return URI->new(shift->api_url . '/users/USERNAME/events');
 }
 
+sub _build_user_calendar_url {
+  return URI->new(shift->api_url . '/users/USERNAME/calendar');
+}
+
 sub _build_user_gigs_url {
   return URI->new(shift->api_url . '/users/USERNAME/gigography');
+}
+
+sub _build_user_tracked_url {
+  return URI->new(shift->api_url . '/users/USERNAME/THING/tracked');
+}
+
+sub _build_user_muted_url {
+  return URI->new(shift->api_url . '/users/USERNAME/artists/muted');
+}
+
+sub _build_user_trackings_url {
+  return URI->new(shift->api_url . '/users/USERNAME/trackings/TRACKEE');
 }
 
 sub _build_artists_url {
@@ -168,7 +187,8 @@ sub _build_locations_url {
   return URI->new(shift->api_url . '/locations');
 }
 
-has ['events_params', 'user_events_params', 'user_gigs_params',
+has ['events_params', 'user_events_params', 'user_calendar_params',
+     'user_gigs_params', 'user_tracked_params', 'user_muted_params',
      'artist_events_params', 'artist_gigs_params',
      'artist_search_params', 'similar_artist_search_params',
      'venue_events_params', 'metro_events_params',
@@ -191,10 +211,28 @@ sub _build_user_events_params {
   return { map { $_ => 1 } @params };
 }
 
+sub _build_user_calendar_params {
+  my @params = qw[ created_after page per_page order ];
+
+  return { map { $_ => 1 } @params };
+}
+
 sub _build_user_gigs_params {
   my @params = qw [ page per_page order];
 
   return { map { $_ => 1 } @params };
+}
+
+sub _build_user_tracked_params {
+  my @params = qw[ page per_page fields created_after ];
+
+  return { map { $_ => 1} @params };
+}
+
+sub _build_user_muted_params {
+  my @params = qw[ page per_page fields ];
+
+  return { map { $_ => 1} @params };
 }
 
 sub _build_artist_events_params {
@@ -253,10 +291,12 @@ has responses_handled => (
 
 sub _build_responses_handled {
   return {
-    artist  =>  'Net::Songkick::Artist',
-    event   =>  'Net::Songkick::Event',
-    location => 'Net::Songkick::Location',
-    venue   =>  'Net::Songkick::Venue',
+    artist    =>  'Net::Songkick::Artist',
+    calendarEntry => 'Net::Songkick::Calendar',    
+    event     =>  'Net::Songkick::Event',
+    location  => 'Net::Songkick::Location',
+    metroArea =>  'Net::Songkick::MetroArea',
+    venue     =>  'Net::Songkick::Venue',
   };
 }
 
@@ -273,6 +313,11 @@ sub _request {
     return $resp->content;
   }
 
+  # Tracking requests return may legitimately return 404
+  if ($resp->is_error( '404' )) {
+    return undef;
+  }
+  
   die $resp->content;
 }
 
@@ -299,7 +344,7 @@ sub parse_results_from_json {
   my ($json) = @_;
 
   my @objects;
-  my $data = $self->json_decoder->decode($json);
+  my $data = $self->json_decoder->decode($json) || die "Failure parsing: ".Dumper($json);
 
   # Dump the two top levels of the JSON
   $data = $data->{resultsPage} if exists $data->{resultsPage};
@@ -758,7 +803,7 @@ sub get_similar_artists {
                    : [ $self->parse_results_from_json($resp) ];  
 }
 
-=head2 $sk->get_event({ ... options ... });
+=head2 $sk->get_event_details({ ... options ... });
 
 Gets detailed event information, including full venue information,
 for the specified event.
@@ -924,6 +969,232 @@ sub get_locations {
   my $resp = $self->_request($url, \%req_args);
 
   return $resp unless $self->return_perl;
+
+  return wantarray ? $self->parse_results_from_json($resp)
+                   : [ $self->parse_results_from_json($resp) ];
+}
+
+=head2 $sk->get_upcoming_calendar({ ... options ... });
+
+Gets a list of upcoming events for a particular user from Songkick, returning
+calendar entry objects.
+See L<https://www.songkick.com/developer/upcoming-events-for-user> for details.
+
+This method requires a mandatory B<user> parameter identifying the user and a
+B<reason> parameter containing either I<tracked_artist> or I<attendance>.
+
+This method has optional parameters: B<created_after> to filter out older
+events, B<page> to control which page of the data you want to return, B<per_page>
+to control the number of results to return in each page, and B<order> to
+control date ordering. 
+
+This method also supports the B<format> parameter.
+
+=cut
+
+sub get_upcoming_calendar {
+  my $self = shift;
+
+  my ($params) = @_;
+
+  my $user;
+  if (exists $params->{user}) {
+    $user = delete $params->{user};
+  } else {
+    die "user not passed to get_upcoming_calendar\n";
+  }
+
+  unless (exists $params->{reason}) {
+    die "reason not passed to get_upcoming_calendar\n";
+  }
+  
+  my $url = $self->user_calendar_url . '.' . $self->api_format;
+  $url =~ s/USERNAME/$user/;
+  $url = URI->new($url);
+
+  my %req_args;
+
+  foreach (keys %$params) {
+    if ($self->user_events_params->{$_}) {
+      $req_args{$_} = $params->{$_};
+    }
+  }
+
+  my $resp = $self->_request($url, \%req_args);
+
+  return $resp unless $self->return_perl;
+
+  return wantarray ? $self->parse_results_from_json($resp)
+                   : [ $self->parse_results_from_json($resp) ];
+}
+
+=head2 $sk->get_tracked({ ... options ... });
+
+Returns the artists or metro areas tracked by a user. See
+L<https://www.songkick.com/developer/trackings> for details.
+
+This method requires a mandatory B<user> parameter identifying the user.
+An B<artist_id> ,B<event_id>, or B<metro_id> parameter, containing the
+relevant Songkick ID to check for, must also be passed.
+
+This method has optional parameters: B<page> to control which page of the
+data you want to return, B<per_page> to control the number of results to
+return in each page, B<field> to specify a subset of fields to return in
+the response, and B<created_after> to specify that only items created
+on or after a given time/date should be included in the response.
+
+This method also supports the B<format> parameter.
+
+=cut
+
+sub get_tracked {
+  my $self = shift;
+
+  my ($params) = @_;
+
+  my $user;
+  if (exists $params->{user}) {
+    $user = delete $params->{user};
+  } else {
+    die "user not passed to get_tracking\n";
+  }
+  
+  my $tracked;
+  if( exists $params->{tracked} ) {
+    $tracked = delete $params->{tracked};
+  } else {
+    die "No tracked parameter passed to get_tracking\n";
+  }
+  
+  my $url = $self->user_tracked_url . '.' . $self->api_format; #/users/USERNAME/THING/tracked
+  $url =~ s/USERNAME/$user/;
+  $url =~ s/THING/$tracked/;
+  $url = URI->new($url);
+
+  my %req_args;
+
+  foreach (keys %$params) {
+    if ($self->user_tracked_params->{$_}) {
+      $req_args{$_} = $params->{$_};
+    }
+  }
+
+  my $resp = $self->_request($url, \%req_args);
+
+  return $resp unless $self->return_perl;
+
+  return wantarray ? $self->parse_results_from_json($resp)
+                   : [ $self->parse_results_from_json($resp) ];
+}
+
+=head2 $sk->get_muted({ ... options ... });
+
+Returns the artists that a user once tracked but has subsequently untracked.
+See L<https://www.songkick.com/developer/trackings> for details.
+
+This method requires a mandatory B<user> parameter identifying the user.
+
+This method has optional parameters: B<page> to control which page of the
+data you want to return, B<per_page> to control the number of results to
+return in each page, and B<field> to specify a subset of fields to return in
+the response.
+
+This method also supports the B<format> parameter.
+
+=cut
+
+sub get_muted {
+  my $self = shift;
+
+  my ($params) = @_;
+
+  my $user;
+  if (exists $params->{user}) {
+    $user = delete $params->{user};
+  } else {
+    die "user not passed to get_tracking\n";
+  }
+  
+ 
+  my $url = $self->user_muted_url . '.' . $self->api_format; #/users/USERNAME/artists/muted
+  $url =~ s/USERNAME/$user/;
+  $url = URI->new($url);
+
+  my %req_args;
+
+  foreach (keys %$params) {
+    if ($self->user_muted_params->{$_}) {
+      $req_args{$_} = $params->{$_};
+    }
+  }
+
+  my $resp = $self->_request($url, \%req_args);
+
+  return $resp unless $self->return_perl;
+
+  return wantarray ? $self->parse_results_from_json($resp)
+                   : [ $self->parse_results_from_json($resp) ];
+}
+
+=head2 $sk->get_tracking({ ... options ... });
+
+Checks whether a user tracks a given artist, event, or metro area. See
+L<https://www.songkick.com/developer/trackings> for details.
+
+This method requires a mandatory B<user> parameter identifying the user.
+An B<artist_id> ,B<event_id>, or B<metro_id> parameter, containing the
+relevant Songkick ID to check for, must also be passed.
+
+This method has no optional parameters.
+
+This method also supports the B<format> parameter.
+
+If the requested item is tracked by the user, a tracking object will be
+returned. If not, I<undef> is returned.
+
+=cut
+
+sub get_tracking {
+  my $self = shift;
+
+  my ($params) = @_;
+
+  my $user;
+  if (exists $params->{user}) {
+    $user = delete $params->{user};
+  } else {
+    die "user not passed to get_tracking\n";
+  }
+  
+  my $url = $self->user_trackings_url . '.' . $self->api_format; #/users/USERNAME/trackings/TRACKEE
+  $url =~ s/USERNAME/$user/;
+
+  my $trackee;
+  if (exists $params->{artist_id}) {
+    $trackee = 'artist:'.delete $params->{artist_id};
+  } elsif (exists $params->{event_id}) {
+    $trackee = 'event:'.delete $params->{event_id};
+  } elsif (exists $params->{metro_area_id}) {
+    $trackee = 'metro_area:'.delete $params->{metro_area_id};
+  } else {
+    die "No artist_id, event_id, or metro_area_id passed to get_tracking\n";
+  }
+  $url =~ s/TRACKEE/$trackee/;
+
+  $url = URI->new($url);
+
+  my %req_args;
+
+  foreach (keys %$params) {
+    if ($self->user_trackings_params->{$_}) {
+      $req_args{$_} = $params->{$_};
+    }
+  }
+
+  my $resp = $self->_request($url, \%req_args);
+
+  # $resp may contain 404 if the user does not track the specified item
+  return $resp unless ($self->return_perl && $resp);
 
   return wantarray ? $self->parse_results_from_json($resp)
                    : [ $self->parse_results_from_json($resp) ];

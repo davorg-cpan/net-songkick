@@ -1,10 +1,10 @@
 =head1 NAME
 
-Net::Songkick::MetroArea - Models a metropolitan area in the Songkick API
+Net::Songkick::Reason - Models a metropolitan area in the Songkick API
 
 =cut
 
-package Net::Songkick::MetroArea;
+package Net::Songkick::Reason;
 
 use strict;
 use warnings;
@@ -12,29 +12,20 @@ use warnings;
 use Moose;
 use Moose::Util::TypeConstraints;
 
-use Net::Songkick::Country;
-use Net::Songkick::State;
+use Net::Songkick::Artist;
 
-coerce 'Net::Songkick::MetroArea',
+coerce 'Net::Songkick::Reason',
   from 'HashRef',
-  via { Net::Songkick::MetroArea->new($_) };
-
+  via { Net::Songkick::Reason->new($_) };
 
 has $_ => (
     is => 'ro',
     isa => 'Str',
-) for qw[id displayName];
+) for qw[attendance];
 
-has 'country' => (
+has trackedArtist => (
     is => 'ro',
-    isa => 'Net::Songkick::Country',
-    coerce => 1,
-);
-
-has state => (
-    is => 'ro',
-    isa => 'Net::Songkick::State',
-    coerce => 1,
+    isa => 'ArrayRef[Net::Songkick::Artist]',
 );
 
 no Moose;
@@ -50,7 +41,7 @@ perl(1), L<http://www.songkick.com/>, L<http://developer.songkick.com/>
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (C) 2010, Magnum Solutions Ltd.  All Rights Reserved.
+Copyright (C) 2018, Magnum Solutions Ltd.  All Rights Reserved.
 
 This script is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.
