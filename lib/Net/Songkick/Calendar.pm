@@ -12,23 +12,34 @@ use warnings;
 use Moose;
 use Moose::Util::TypeConstraints;
 
-use Net::Songkick::Event;
-use Net::Songkick::Reason;
+use Data::Dumper;
+
+use Net::Songkick::CalendarEntry;
+
+subtype 'Net::Songkick::CalendarEntries'
+  => as 'ArrayRef[Net::Songkick::CalendarEntry]';
 
 coerce 'Net::Songkick::Calendar',
   from 'HashRef',
-  via { Net::Songkick::Calendar->new($_) };
+  via {
+    warn "In coerce\n";
+    warn Dumper @_;
+    my $obj = Net::Songkick::Calendar->new( calendarEntries => [ $_ ] );
+    warn Dumper $obj;
+    return $obj;
+  };
 
+coerce 'Net::Songkick::CalendarEntries',
+  from 'ArrayRef',
+  via {
+    my $cal = $_;
+    [ map { Net::Songkick::CalendarEntry->new($_) } @$cal ];
+  };
 
-has 'reason' => (
+has 'calendarEntries' => (
     is => 'ro',
-    isa => 'Net::Songkick::Reason',
+    isa => 'Net::Songkick::CalendarEntries',
     coerce => 1,
-);
-
-has 'event' => (
-    is => 'ro',
-    isa => 'Net::Songkick::Event',
 );
 
 no Moose;

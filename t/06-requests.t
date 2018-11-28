@@ -535,17 +535,18 @@ $ua->map_response(
 
 # TODO: Fix Event parsing when received as part of Calendar entry
 ok( my $calendar = $ns->get_upcoming_calendar( { user => 'bob', reason => 'attendance'} ) );
-#
-#isa_ok($locations, ref []);
-#is(@$locations, 1, 'calendarEntry array has one element');
-#isa_ok($locations->[0], 'Net::Songkick::CalendarEntry');
-#
-#my $centry = $locations->[0];
-#
-#isa_ok($centry->reason, 'Net::Songkick::Reason');
-#is($centry->reason->attendance, 'i_might_go|im_going', 'Calendar entry has expected attendance attribute');
-#isa_ok($centry->reason->trackedArtist->[0], 'Net::Songkick::Artist');
-#isa_ok($centry->event, 'Net::Songkick::Event');
+
+isa_ok($calendar, 'Net::Songkick::Calendar');
+isa_ok($calendar->calendarEntries, ref []);
+is(@{ $calendar->calendarEntries }, 1, 'calendarEntry array has one element');
+isa_ok($calendar->calendarEntries->[0], 'Net::Songkick::CalendarEntry');
+
+my $centry = $calendar->calendarEntries->[0];
+
+isa_ok($centry->reason, 'Net::Songkick::Reason');
+is($centry->reason->attendance, 'i_might_go|im_going', 'Calendar entry has expected attendance attribute');
+isa_ok($centry->reason->trackedArtist->[0], 'Net::Songkick::Artist');
+isa_ok($centry->event, 'Net::Songkick::Event');
 
 $ua->map_response(
   qr{/users/bob/metro_areas/tracked} => HTTP::Response->new(

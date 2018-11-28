@@ -1,0 +1,56 @@
+=head1 NAME
+
+Net::Songkick::CalendarEntry - Models a metropolitan area in the Songkick API
+
+=cut
+
+package Net::Songkick::CalendarEntry;
+
+use strict;
+use warnings;
+
+use Moose;
+use Moose::Util::TypeConstraints;
+
+use Net::Songkick::Event;
+use Net::Songkick::Reason;
+
+coerce 'Net::Songkick::CalendarEntry',
+  from 'HashRef',
+  via { Net::Songkick::CalendarEntry->new($_) };
+
+
+has 'reason' => (
+    is => 'ro',
+    isa => 'Net::Songkick::Reason',
+    coerce => 1,
+);
+
+has 'event' => (
+    is => 'ro',
+    isa => 'Net::Songkick::Event',
+);
+
+use Data::Dumper;                                                                                                       around 'new' => sub {                                                                                                     warn Dumper @_;                                                                                                         my $orig = shift;                                                                                                       my $self = shift;                                                                                                       my $obj = $self->$orig(@_);                                                                                             warn Dumper $obj;                                                                                                       return $obj;                                                                                                          }; 
+
+no Moose;
+__PACKAGE__->meta->make_immutable;
+
+=head1 AUTHOR
+
+Dave Cross <dave@mag-sol.com>
+
+=head1 SEE ALSO
+
+perl(1), L<http://www.songkick.com/>, L<http://developer.songkick.com/>
+
+=head1 COPYRIGHT AND LICENSE
+
+Copyright (C) 2018, Magnum Solutions Ltd.  All Rights Reserved.
+
+This script is free software; you can redistribute it and/or modify it
+under the same terms as Perl itself.
+
+=cut
+
+1;
