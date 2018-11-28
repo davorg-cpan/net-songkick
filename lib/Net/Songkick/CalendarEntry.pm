@@ -31,8 +31,6 @@ has 'event' => (
     isa => 'Net::Songkick::Event',
 );
 
-use Data::Dumper;                                                                                                       around 'new' => sub {                                                                                                     warn Dumper @_;                                                                                                         my $orig = shift;                                                                                                       my $self = shift;                                                                                                       my $obj = $self->$orig(@_);                                                                                             warn Dumper $obj;                                                                                                       return $obj;                                                                                                          }; 
-
 no Moose;
 __PACKAGE__->meta->make_immutable;
 
