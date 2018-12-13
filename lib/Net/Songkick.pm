@@ -33,7 +33,7 @@ Creates a new object which can be used to request data from the Songkick
 API. Requires one parameter which is the user's API key.
 
 To request an API key from Songkick, see
-L<http://www.songkick.com/api_keys/index>.
+L<https://www.songkick.com/api_key_requests/new>.
 
 Returns a Net::Songkick object if successful.
 
