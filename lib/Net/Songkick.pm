@@ -23,7 +23,7 @@ Songkick (L<http://www.songkick.com/>) is a web site that tracks gigs
 around the world. Users can add information about gigs (both in the past
 and the future) and can track their attendance at those gigs.
 
-For more details of the Songkick API see L<http://developer.songkick.com/>.
+For more details of the Songkick API see L<https://www.songkick.com/developer>.
 
 =head1 METHODS
 
