@@ -1,3 +1,5 @@
+use compat::perl7;
+
 =head1 NAME
 
 Net::Songkick::Venue - Models a venue in the Songkick API

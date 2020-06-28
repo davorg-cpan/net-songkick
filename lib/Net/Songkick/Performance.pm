@@ -1,3 +1,5 @@
+use compat::perl7;
+
 =head1 NAME
 
 Net::Songkick::Performance - Models a performance in the Songkick API

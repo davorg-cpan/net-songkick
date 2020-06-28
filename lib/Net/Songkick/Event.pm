@@ -1,3 +1,5 @@
+use compat::perl7;
+
 =head1 NAME
 
 Net::Songkick::Event - Models an event in the Songkick API

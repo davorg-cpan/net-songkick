@@ -1,3 +1,5 @@
+use compat::perl7;
+
 =head1 NAME
 
 Net::Songkick::City - Models a MusicBrainz identifier in the Songkick API

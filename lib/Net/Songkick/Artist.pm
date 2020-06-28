@@ -1,3 +1,5 @@
+use compat::perl7;
+
 =head1 NAME
 
 Net::Songkick::Artist - Models an artist in the Songkick API
