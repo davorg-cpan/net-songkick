@@ -292,7 +292,7 @@ has responses_handled => (
 sub _build_responses_handled {
   return {
     artist    =>  'Net::Songkick::Artist',
-    calendarEntry => 'Net::Songkick::Calendar',    
+    calendarEntry => 'Net::Songkick::Calendar',
     event     =>  'Net::Songkick::Event',
     location  => 'Net::Songkick::Location',
     metroArea =>  'Net::Songkick::MetroArea',
@@ -317,7 +317,7 @@ sub _request {
   if ($resp->is_error( '404' )) {
     return undef;
   }
-  
+
   die $resp->content;
 }
 
@@ -355,11 +355,11 @@ sub parse_results_from_json {
   die "JSON response not recognised\n" unless exists $self->responses_handled->{ $type };
 
   # Ensure we have an array of events
-  $data->{$type} = [ $data->{$type} ] if ref $data->{$type} ne 'ARRAY';
+  #$data->{$type} = [ $data->{$type} ] if ref $data->{$type} ne 'ARRAY';
 
-  foreach (@{$data->{$type}}) {
+  #foreach (@{$data->{$type}}) {
     push @objects, $self->responses_handled->{ $type }->new($_);
-  }
+  #}
 
   return @objects;
 }
@@ -386,7 +386,7 @@ sub get_events {
   unless (exists $params->{artist_name} or exists $params->{location}) {
     die "One of artist_name or location must be specified"
   }
-  
+
   my $url = URI->new($self->events_url . '.' . $self->api_format);
 
   my %req_args;
@@ -413,7 +413,7 @@ This method has optional parameters: B<attendance> to filter results based
 upon user-flagged attendance, B<created_after> to filter out older events,
 B<page> to control which page of the data you want to return, B<per_page>
 to control the number of results to return in each page, and B<order> to
-control date ordering. 
+control date ordering.
 See L<https://www.songkick.com/developer/upcoming-events-for-user> for details.
 
 This method also supports the B<format> parameter.
@@ -732,7 +732,7 @@ sub get_artists {
   } else {
     die "name of the artist not passed in <query> parameter to get_artists\n";
   }
-  
+
   $url = $self->artist_search_url . '.' . $self->api_format . '?api_key='
     . $self->api_key .'&query=' . $query;
   $url = URI->new($url);
@@ -781,7 +781,7 @@ sub get_similar_artists {
   } else {
     die "ID of the artist not passed in <artist_id> parameter to get_similar_artists\n";
   }
-  
+
   $url = $self->similar_artist_search_url . '.' . $self->api_format . '?api_key='
     . $self->api_key;
   $url =~ s/ARTIST_ID/$artist_id/;
@@ -800,7 +800,7 @@ sub get_similar_artists {
   return $resp unless $self->return_perl;
 
   return wantarray ? $self->parse_results_from_json($resp)
-                   : [ $self->parse_results_from_json($resp) ];  
+                   : [ $self->parse_results_from_json($resp) ];
 }
 
 =head2 $sk->get_event_details({ ... options ... });
@@ -954,7 +954,7 @@ sub get_locations {
   unless(exists $params->{query} || exists $params->{location}) {
     die "No query or location passed to get_locations\n";
   }
-  
+
   my $url = $self->locations_url . '.' . $self->api_format;
   $url = URI->new($url);
 
@@ -986,7 +986,7 @@ B<reason> parameter containing either I<tracked_artist> or I<attendance>.
 This method has optional parameters: B<created_after> to filter out older
 events, B<page> to control which page of the data you want to return, B<per_page>
 to control the number of results to return in each page, and B<order> to
-control date ordering. 
+control date ordering.
 
 This method also supports the B<format> parameter.
 
@@ -1007,7 +1007,7 @@ sub get_upcoming_calendar {
   unless (exists $params->{reason}) {
     die "reason not passed to get_upcoming_calendar\n";
   }
-  
+
   my $url = $self->user_calendar_url . '.' . $self->api_format;
   $url =~ s/USERNAME/$user/;
   $url = URI->new($url);
@@ -1058,14 +1058,14 @@ sub get_tracked {
   } else {
     die "user not passed to get_tracking\n";
   }
-  
+
   my $tracked;
   if( exists $params->{tracked} ) {
     $tracked = delete $params->{tracked};
   } else {
     die "No tracked parameter passed to get_tracking\n";
   }
-  
+
   my $url = $self->user_tracked_url . '.' . $self->api_format; #/users/USERNAME/THING/tracked
   $url =~ s/USERNAME/$user/;
   $url =~ s/THING/$tracked/;
@@ -1114,8 +1114,8 @@ sub get_muted {
   } else {
     die "user not passed to get_tracking\n";
   }
-  
- 
+
+
   my $url = $self->user_muted_url . '.' . $self->api_format; #/users/USERNAME/artists/muted
   $url =~ s/USERNAME/$user/;
   $url = URI->new($url);
@@ -1165,7 +1165,7 @@ sub get_tracking {
   } else {
     die "user not passed to get_tracking\n";
   }
-  
+
   my $url = $self->user_trackings_url . '.' . $self->api_format; #/users/USERNAME/trackings/TRACKEE
   $url =~ s/USERNAME/$user/;
 
