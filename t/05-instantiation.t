@@ -79,6 +79,8 @@ is($venue->id, 17_522, 'Got the right venue');
 is($venue->displayName, 'O2 Brixton Academy',
    'Venue has the correct name');
 isa_ok($venue->metroArea, 'Net::Songkick::MetroArea');
+# Backwards compatibility
+isa_ok($venue->metro_area, 'Net::Songkick::MetroArea');
 is($venue->metroArea->displayName, 'London',
    'Metro area is in the correct Metro Area');
 
