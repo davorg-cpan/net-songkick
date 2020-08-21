@@ -71,7 +71,7 @@ my $ns = Net::Songkick->new({
     ua      => $ua,
 });
 
-ok(my $events = $ns->get_events);
+ok(my $events = $ns->get_events({ venue_id => 6239 }));
 
 isa_ok($events, ref []);
 is(@$events, 1, 'Array has one element');
