@@ -44,7 +44,7 @@ package Net::Songkick;
 use strict;
 use warnings;
 
-our $VERSION = '1.0.2';
+our $VERSION = '1.0.3';
 
 use Moose;
 
@@ -192,6 +192,7 @@ sub _request {
   my $resp = $self->ua->get($url);
 
   if ($resp->is_success) {
+    warn $resp->content, "\n";
     return $resp->content;
   }
 

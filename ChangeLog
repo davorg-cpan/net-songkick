@@ -1,8 +1,18 @@
 Revision History for Perl module Net::Songkick
 
+1.0.3 2020-09-06
+
+  - Many fixes queued up over the last four years
+  - Removed references to unused module XML::LibXML
+  - Added get_venue_events()
+  - Refactoring
+  - Improved tests
+  - Many improvements to API response model (thanks Richard Leach)
+  - Documentation fixes (thanks Mohammad Anwar and Michael West)
+
 1.0.2 2016-06-21
 
-  - Add real ChangelLog
+  - Add real ChangeLog
   - Add more tests
   - Add repo information to Build.PL
 
