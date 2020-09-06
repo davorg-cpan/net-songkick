@@ -191,10 +191,7 @@ sub _request {
 
   my $resp = $self->ua->get($url);
 
-  if ($resp->is_success) {
-    warn $resp->content, "\n";
-    return $resp->content;
-  }
+  return $resp->content if $resp->is_success;
 
   die $resp->content;
 }
@@ -228,14 +225,20 @@ sub parse_events_from_json {
   $data = $data->{resultsPage} if exists $data->{resultsPage};
   $data = $data->{results}     if exists $data->{results};
 
-  # Ensure we have an event keys
-  die "No events found in JSON\n" unless exists $data->{event};
+  if (exists $data->{event}) {
+    # Ensure we have an array of events
+    $data->{event} = [ $data->{event}] if ref $data->{event} ne 'ARRAY';
 
-  # Ensure we have an array of events
-  $data->{event} = [ $data->{event}] if ref $data->{event} ne 'ARRAY';
+    @events = map { Net::Songkick::Event->new($_) } @{$data->{event}};
+  } elsif (exists $data->{calendarEntry}) {
+    $data->{calendarEntry} = [ $data->{calendarEntry} ]
+      if ref $data->{calendarEntry} ne 'ARRAY';
 
-  foreach (@{$data->{event}}) {
-    push @events, Net::Songkick::Event->new($_);
+    @events = map {
+      Net::Songkick::Event->new($_->{event})
+    } @{ $data->{calendarEntry} };
+  } else {
+    die "No events found in JSON\n" unless exists $data->{event};
   }
 
   return @events;
@@ -274,8 +277,9 @@ sub get_events {
 
   return $resp unless $self->return_perl;
 
-  return wantarray ? $self->parse_events_from_json($resp)
-                   : [ $self->parse_events_from_json($resp) ];
+  my @events = $self->parse_events_from_json($resp);
+
+  return wantarray ? @events : \@events;
 }
 
 =head2 $sk->get_upcoming_events({ ... options ... });
@@ -317,8 +321,9 @@ sub get_upcoming_events {
 
   return $resp unless $self->return_perl;
 
-  return wantarray ? $self->parse_events_from_json($resp)
-                   : [ $self->parse_events_from_json($resp) ];
+  my @events = $self->parse_events_from_json($resp);
+
+  return wantarray ? @events : \@events;
 }
 
 =head2 $sk->get_past_events({ ... options ... });
@@ -361,8 +366,9 @@ sub get_past_events {
 
   return $resp unless $self->return_perl;
 
-  return wantarray ? $self->parse_events_from_json($resp)
-                   : [ $self->parse_events_from_json($resp) ];
+  my @events = $self->parse_events_from_json($resp);
+
+  return wantarray ? @events : \@events;
 }
 
 =head2 $sk->get_venue_events({ ... options ...});
@@ -397,8 +403,9 @@ sub get_venue_events {
 
   return $resp unless $self->return_perl;
 
-  return wantarray ? $self->parse_events_from_json($resp)
-                   : [ $self->parse_events_from_json($resp) ];
+  my @events = $self->parse_events_from_json($resp);
+
+  return wantarray ? @events : \@events;
 }
 
 =head2 $sk->get_artist_events({ ... options ... });
@@ -436,8 +443,9 @@ sub get_artist_events {
 
   return $resp unless $self->return_perl;
 
-  return wantarray ? $self->parse_events_from_json($resp)
-                   : [ $self->parse_events_from_json($resp) ];
+  my @events = $self->parse_events_from_json($resp);
+
+  return wantarray ? @events : \@events;
 }
 
 =head2 $sk->get_metro_events({ ... options ... });
@@ -472,8 +480,9 @@ sub get_metro_events {
 
   return $resp unless $self->return_perl;
 
-  return wantarray ? $self->parse_events_from_json($resp)
-                   : [ $self->parse_events_from_json($resp) ];
+  my @events = $self->parse_events_from_json($resp);
+
+  return wantarray ? @events : \@events;
 }
 
 no Moose;

@@ -3,8 +3,11 @@ use warnings;
 use Test::More;
 use Test::LWP::UserAgent;
 use HTTP::Response;
+use DateTime;
 
 use Net::Songkick;
+
+my $date = DateTime->now->add(days => 7)->ymd('-');
 
 my $artist_json = '{
         "uri":"http://www.songkick.com/artists/29835-wild-flag?utm_source=PARTNER_ID&utm_medium=partner",
@@ -20,8 +23,8 @@ my $event_json = qq[{
   "displayName":"Wild Flag at The Fillmore (April 18, 2012)",
   "start": {
     "time":"20:00:00",
-    "date":"2012-04-18",
-    "datetime":"2012-04-18T20:00:00-0800"
+    "date":"$date",
+    "datetime":"${date}T20:00:00-0800"
   },
   "performance": [{
     "artist": $artist_json,
@@ -113,10 +116,6 @@ isa_ok($event->performance->[0]->artist->identifier->[0], 'Net::Songkick::MusicB
 isa_ok($event->venue, 'Net::Songkick::Venue');
 isa_ok($event->venue->metroArea, 'Net::Songkick::MetroArea');
 
-TODO : {
-  local $TODO = 'Need to fix this test';
-
-  ok($events = eval { $ns->get_upcoming_events({ user => 'foo' }) } );
-};
+ok($events = $ns->get_upcoming_events({ user => 'foo' }));
 
 done_testing;
