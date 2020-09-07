@@ -1,5 +1,10 @@
 Revision History for Perl module Net::Songkick
 
+1.0.4 2020-09-07
+
+  - Fixed packaging (missing files)
+  - Fixed a broken test
+
 1.0.3 2020-09-06
 
   - Many fixes queued up over the last four years
