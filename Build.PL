@@ -1,7 +1,7 @@
 use Module::Build;
 my $build = Module::Build->new(
     license            => 'perl',
-    dist_author        => 'Dave Cross <dave@mag-sol.com>',
+    dist_author        => 'Dave Cross <dave@perlhacks.com>',
     module_name        => 'Net::Songkick',
     license            => 'perl',
     requires           => {

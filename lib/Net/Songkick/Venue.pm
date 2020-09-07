@@ -44,7 +44,7 @@ __PACKAGE__->meta->make_immutable;
 
 =head1 AUTHOR
 
-Dave Cross <dave@mag-sol.com>
+Dave Cross <dave@perlhacks.com>
 
 =head1 SEE ALSO
 
