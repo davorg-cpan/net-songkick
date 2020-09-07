@@ -12,11 +12,14 @@ my $build = Module::Build->new(
         JSON                       => 0,
         DateTime::Format::Strptime => 0,
     },
-    build_recommends   => {
+    test_recommends    => {
         Test::Pod           => 0,
         Test::Pod::Coverage => 0,
-        Test::LWP::UserAgent => 0,
         HTTP::Request       => 0,
+    },
+    test_requires      => {
+        Test::LWP::UserAgent => 0,
+        HTTP::Response       => 0,
     },
     create_makefile_pl => 'traditional',
     script_files       => [ 'bin/gigs' ],
