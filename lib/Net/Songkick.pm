@@ -19,7 +19,7 @@ Net::Songkick - Perl wrapper for the Songkick API
 
 This module presents a Perl wrapper around the Songkick API.
 
-Songkick (L<http://www.songkick.com/>) is a web site that tracks gigs
+Songkick (L<https://www.songkick.com/>) is a web site that tracks gigs
 around the world. Users can add information about gigs (both in the past
 and the future) and can track their attendance at those gigs.
 
@@ -44,7 +44,7 @@ package Net::Songkick;
 use strict;
 use warnings;
 
-our $VERSION = '1.0.6';
+our $VERSION = '1.0.7';
 
 use Moose;
 
