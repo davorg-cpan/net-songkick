@@ -19,7 +19,7 @@ Net::Songkick - Perl wrapper for the Songkick API
 
 This module presents a Perl wrapper around the Songkick API.
 
-Songkick (L<https://www.songkick.com/>) is a web site that tracks gigs
+Songkick (L<http://www.songkick.com/>) is a web site that tracks gigs
 around the world. Users can add information about gigs (both in the past
 and the future) and can track their attendance at those gigs.
 
@@ -159,7 +159,7 @@ sub _build_user_events_params {
 }
 
 sub _build_user_gigs_params {
-  my @params = ( 'page' );
+  my @params = qw[ page per_page ];
 
   return { map { $_ => 1 } @params };
 }
@@ -248,7 +248,7 @@ sub parse_events_from_json {
 
 Gets a list of upcoming events from Songkick. Various parameters to control
 the events returned are supported for the full list see
-L<https://www.songkick.com/developer/event-search>.
+L<http://www.songkick.com/developer/event-search>.
 
 In addition, this method takes an extra parameter, B<format>, which control
 the format of the data returned. This can be either I<xml>, I<json> or
@@ -494,11 +494,11 @@ Dave Cross <dave@perlhacks.com>
 
 =head1 SEE ALSO
 
-perl(1), L<https://www.songkick.com/>, L<https://developer.songkick.com/>
+perl(1), L<http://www.songkick.com/>, L<http://developer.songkick.com/>
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (C) 2010-21, Magnum Solutions Ltd.  All Rights Reserved.
+Copyright (C) 2010, Magnum Solutions Ltd.  All Rights Reserved.
 
 This script is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.
