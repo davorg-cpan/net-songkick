@@ -1,9 +1,5 @@
-# This is a basic workflow to help you get started with Actions
-
 name: CI
 
-# Controls when the action will run. Triggers the workflow on push or pull request
-# events but only for the master branch
 on:
   push:
     branches: [ master ]
@@ -11,8 +7,8 @@ on:
     branches: [ master ]
   workflow_dispatch:
 
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
+<<<<<<< Updated upstream
   build:
     runs-on: ${{ matrix.os }}
     strategy:
@@ -29,3 +25,19 @@ jobs:
       - run: perl -V
       - run: cpanm --installdeps .
       - run: prove -lv t
+=======
+  test:
+    uses: PerlToolsTeam/github_workflows/.github/workflows/cpan-test.yml@main
+    with:
+      os: "[ 'ubuntu-latest', 'macos-latest' ]"
+      perl_version: "[ 'latest' ]"
+
+  coverage:
+    uses: PerlToolsTeam/github_workflows/.github/workflows/cpan-coverage.yml@main
+
+  perlcritic:
+    uses: PerlToolsTeam/github_workflows/.github/workflows/cpan-perlcritic.yml@main
+
+  complexity:
+    uses: PerlToolsTeam/github_workflows/.github/workflows/cpan-complexity.yml@main
+>>>>>>> Stashed changes
