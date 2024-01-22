@@ -8,24 +8,6 @@ on:
   workflow_dispatch:
 
 jobs:
-<<<<<<< Updated upstream
-  build:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ 'ubuntu-latest', 'macos-latest' ]
-        perl: [ 'latest' ]
-    name: Perl ${{ matrix.perl }} on ${{ matrix.os }}
-    steps:
-      - uses: actions/checkout@v4
-      - name: Set up perl
-        uses: shogo82148/actions-setup-perl@v1
-        with:
-          perl-version: ${{ matrix.perl }}
-      - run: perl -V
-      - run: cpanm --installdeps .
-      - run: prove -lv t
-=======
   test:
     uses: PerlToolsTeam/github_workflows/.github/workflows/cpan-test.yml@main
     with:
@@ -40,4 +22,4 @@ jobs:
 
   complexity:
     uses: PerlToolsTeam/github_workflows/.github/workflows/cpan-complexity.yml@main
->>>>>>> Stashed changes
+
