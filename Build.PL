@@ -28,11 +28,11 @@ my $build = Module::Build->new(
         resources => {
             repository => {
                 type => 'git',
-                url => 'https://github.com/davorg/net-songkick.git',
-                web => 'https://github.com/davorg/net-songkick',
+                url => 'https://github.com/davorg-cpan/net-songkick.git',
+                web => 'https://github.com/davorg-cpan/net-songkick',
             },
             bugtracker => {
-                web => 'https://github.com/davorg/net-songkick/issues',
+                web => 'https://github.com/davorg-cpan/net-songkick/issues',
             },
         },
     },
